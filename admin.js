@@ -181,6 +181,15 @@ function showApp() {
     renderAll();
 }
 
+function clearTestData() {
+    if (!confirm('Удалить все тестовые заявки и чаты? Клиенты и пользователи сохранятся.')) return;
+    localStorage.removeItem('crm_tickets');
+    localStorage.removeItem('crm_chats');
+    localStorage.removeItem('crm_consent_log');
+    renderAll();
+    showToast('Тестовые данные очищены');
+}
+
 // ==================== NAVIGATION ====================
 function showSection(section) {
     document.querySelectorAll('[id^="section-"]').forEach(el => el.classList.add('hidden'));
