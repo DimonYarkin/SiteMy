@@ -567,16 +567,22 @@ function createChatListItem(chat, isClosed) {
     const item = document.createElement('div');
     const isActive = activeChatSessionId === chat.sessionId;
     const unread = chat.hasNewMessages && !isClosed;
+    const reopened = chat.reopenedBy === 'client' && chat.status === 'open';
     
-    item.className = `px-4 py-3 border-b border-gray-50 cursor-pointer hover:bg-gray-50 transition-all ${isActive ? 'bg-red-50 border-l-2 border-l-brand-red' : ''} ${unread ? 'bg-yellow-50/50' : ''}`;
+    item.className = `px-4 py-3 border-b border-gray-50 cursor-pointer hover:bg-gray-50 transition-all ${isActive ? 'bg-red-50 border-l-2 border-l-brand-red' : ''} ${unread ? 'bg-yellow-50/50' : ''} ${reopened ? 'bg-blue-50/50' : ''}`;
     
     const lastMsg = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1] : null;
     const lastMsgText = lastMsg ? lastMsg.text.substring(0, 50) + (lastMsg.text.length > 50 ? '...' : '') : 'Нет сообщений';
     const lastMsgTime = lastMsg ? lastMsg.time : '';
     
-    const statusBadge = isClosed 
-        ? `<span class="text-xs px-1.5 py-0.5 rounded ${chat.closeStatus === 'resolved' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'}">${chat.closeStatus === 'resolved' ? 'Решен' : 'Общение'}</span>`
-        : (unread ? '<span class="w-2.5 h-2.5 bg-yellow-400 rounded-full animate-pulse"></span>' : '');
+    let statusBadge = '';
+    if (reopened) {
+        statusBadge = '<span class="text-xs px-1.5 py-0.5 rounded bg-blue-100 text-blue-600 animate-pulse">Возобновлен</span>';
+    } else if (isClosed) {
+        statusBadge = `<span class="text-xs px-1.5 py-0.5 rounded ${chat.closeStatus === 'resolved' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'}">${chat.closeStatus === 'resolved' ? 'Решен' : 'Общение'}</span>`;
+    } else if (unread) {
+        statusBadge = '<span class="w-2.5 h-2.5 bg-yellow-400 rounded-full animate-pulse"></span>';
+    }
     
     const newMsgIndicator = unread ? '<div class="w-1.5 h-1.5 bg-brand-red rounded-full absolute top-3 right-3"></div>' : '';
     
@@ -609,8 +615,10 @@ function openChat(sessionId) {
     setChats(chats);
     
     // Update header
+    const reopened = chat.reopenedBy === 'client' && chat.status === 'open';
+    const statusText = reopened ? 'Возобновлен клиентом' : (chat.status === 'open' ? 'Активен' : 'Завершен');
     document.getElementById('chatWindowTitle').textContent = `Чат ${sessionId.substring(0, 16)}...`;
-    document.getElementById('chatWindowSubtitle').textContent = `${chat.messages.length} сообщений · ${chat.status === 'open' ? 'Активен' : 'Завершен'}`;
+    document.getElementById('chatWindowSubtitle').textContent = `${chat.messages.length} сообщений · ${statusText}`;
     document.getElementById('chatWindowActions').classList.toggle('hidden', chat.status !== 'open');
     document.getElementById('chatWindowInput').classList.toggle('hidden', chat.status !== 'open');
     
@@ -618,6 +626,14 @@ function openChat(sessionId) {
     const messagesDiv = document.getElementById('chatWindowMessages');
     const previousCount = messagesDiv.children.length;
     messagesDiv.innerHTML = '';
+    
+    // Show reopened notice if applicable
+    if (reopened) {
+        const notice = document.createElement('div');
+        notice.className = 'mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl text-center';
+        notice.innerHTML = '<span class="text-sm text-blue-700 font-medium">Клиент возобновил чат — есть новые вопросы</span>';
+        messagesDiv.appendChild(notice);
+    }
     
     chat.messages.forEach((msg, index) => {
         const isClient = msg.from === 'client';
@@ -720,11 +736,16 @@ function closeChatWithStatus(status) {
 
 // Poll for new chat messages
 let lastAdminMessageCount = 0;
+let lastReopenedChats = new Set();
 
 function pollAdminChats() {
     const chats = getChats();
     const totalMessages = chats.reduce((sum, c) => sum + c.messages.length, 0);
     const hasNew = chats.some(c => c.status === 'open' && c.hasNewMessages);
+    
+    // Check for reopened chats
+    const reopenedChats = new Set(chats.filter(c => c.reopenedBy === 'client' && c.status === 'open').map(c => c.sessionId));
+    const newReopened = [...reopenedChats].filter(id => !lastReopenedChats.has(id));
     
     updateChatBadge();
     
@@ -742,12 +763,17 @@ function pollAdminChats() {
                 openChat(activeChatSessionId);
             }
         }
-    } else if (hasNew && totalMessages > lastAdminMessageCount) {
-        // Show toast notification
-        showToast('Новое сообщение в онлайн-чате!');
+    } else {
+        // Show toast notifications
+        if (newReopened.length > 0) {
+            showToast('Клиент возобновил чат — есть новые вопросы!');
+        } else if (hasNew && totalMessages > lastAdminMessageCount) {
+            showToast('Новое сообщение в онлайн-чате!');
+        }
     }
     
     lastAdminMessageCount = totalMessages;
+    lastReopenedChats = reopenedChats;
 }
 
 // Poll every 3 seconds

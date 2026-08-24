@@ -386,6 +386,7 @@ function sendChat() {
     let chat = chats.find(c => c.sessionId === sessionId);
     
     if (!chat) {
+        // New chat
         chat = {
             sessionId,
             status: 'open',
@@ -395,6 +396,15 @@ function sendChat() {
             lastActivity: new Date().toISOString(),
         };
         chats.push(chat);
+    } else if (chat.status === 'closed') {
+        // Reopen closed chat
+        chat.status = 'open';
+        chat.hasNewMessages = true;
+        chat.reopenedAt = new Date().toISOString();
+        chat.reopenedBy = 'client';
+        // Clear previous close status
+        chat.closeStatus = null;
+        chat.closeComment = null;
     }
     
     const time = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
@@ -413,10 +423,14 @@ function sendChat() {
     
     input.value = '';
     
-    // Show auto-response if no manager assigned yet
+    // Show auto-response
     if (!chat.assignedTo) {
         setTimeout(() => {
             appendChatMessage('Спасибо! Ваше сообщение передано специалисту. Ожидайте ответа.', false);
+        }, 1500);
+    } else if (chat.reopenedBy === 'client') {
+        setTimeout(() => {
+            appendChatMessage('Чат возобновлён. Специалист ответит в ближайшее время.', false);
         }, 1500);
     }
 }
