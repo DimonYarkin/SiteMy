@@ -271,19 +271,20 @@ function renderDashboard() {
             const client = clients.find(c => c.id === t.client);
             const statusColors = { new: 'bg-yellow-100 text-yellow-700', progress: 'bg-blue-100 text-blue-700', waiting: 'bg-orange-100 text-orange-700', done: 'bg-green-100 text-green-700' };
             const statusNames = { new: 'Новая', progress: 'В работе', waiting: 'Ожидание', done: 'Выполнена' };
-            const sourceBadge = t.source === 'landing-form' ? ' <span class="text-xs px-1.5 py-0.5 rounded bg-green-100 text-green-600">сайт</span>' : '';
-            return `<div class="px-6 py-4 flex items-center justify-between hover:bg-gray-50 cursor-pointer" onclick="showTicketDetail('${t.id}')">
-                <div class="flex items-center gap-4 min-w-0">
-                    <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-sm font-bold text-gray-500">${t.id.replace('t', '#')}${sourceBadge}</div>
-                    <div class="min-w-0">
-                        <div class="font-medium text-brand-dark truncate">${t.subject}</div>
-                        <div class="text-sm text-gray-500">${client ? client.company : 'Аноним'}</div>
+            const shortId = t.id.replace('t', '').slice(-4);
+            const sourceBadge = t.source === 'landing-form' ? '<span class="text-xs px-1.5 py-0.5 rounded bg-green-100 text-green-600 ml-1">сайт</span>' : '';
+            return `<div class="px-4 sm:px-6 py-4 flex items-center justify-between gap-3 hover:bg-gray-50 cursor-pointer" onclick="showTicketDetail('${t.id}')">
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                    <div class="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500 flex-shrink-0">#${shortId}</div>
+                    <div class="min-w-0 flex-1">
+                        <div class="font-medium text-brand-dark text-sm truncate">${t.subject}</div>
+                        <div class="text-xs text-gray-500 truncate">${client ? client.company : 'Аноним'}${sourceBadge}</div>
                     </div>
                 </div>
-                <span class="px-3 py-1 text-xs font-medium rounded-full ${statusColors[t.status]}">${statusNames[t.status]}</span>
+                <span class="px-2.5 py-1 text-xs font-medium rounded-full ${statusColors[t.status]} flex-shrink-0">${statusNames[t.status]}</span>
             </div>`;
         }).join('')
-        : '<div class="px-6 py-8 text-center text-gray-400">Заявок пока нет</div>';
+        : '<div class="px-6 py-8 text-center text-gray-400 text-sm">Заявок пока нет</div>';
     
     // Service stats
     const serviceNames = { dev: 'Доработка', hosting: 'Размещение', marking: 'Маркировка', support: 'Обслуживание', outsourcing: 'IT-аутсорсинг', other: 'Другое' };
@@ -315,19 +316,20 @@ function renderKanban() {
             const assignee = users.find(u => u.id === t.assignee);
             const isAnon = !client || client.source === 'landing-form';
             const sourceBadge = t.source === 'landing-form' ? '<span class="text-xs px-1.5 py-0.5 rounded bg-green-100 text-green-600 ml-1">сайт</span>' : '';
+            const shortId = t.id.replace('t', '').slice(-4);
             return `<div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm cursor-grab hover:shadow-md transition-all border-l-4 ${priorityColors[t.priority]}" draggable="true" ondragstart="handleDragStart(event)" data-id="${t.id}" onclick="showTicketDetail('${t.id}')">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs text-gray-400">${t.id.replace('t', '#')}${sourceBadge}</span>
-                    <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">${serviceNames[t.service] || t.service}</span>
+                <div class="flex items-center justify-between mb-2 gap-2">
+                    <span class="text-xs text-gray-400 flex-shrink-0">#${shortId}${sourceBadge}</span>
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 truncate">${serviceNames[t.service] || t.service}</span>
                 </div>
                 <h4 class="font-semibold text-brand-dark text-sm mb-2 line-clamp-2">${t.subject}</h4>
                 <p class="text-xs text-gray-500 mb-3 line-clamp-2">${t.description || ''}</p>
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <div class="w-6 h-6 rounded-full ${isAnon ? 'bg-gray-400' : 'bg-blue-500'} flex items-center justify-center text-white text-xs font-bold">${client ? client.company[0] : '?'}</div>
-                        <span class="text-xs text-gray-500">${client ? client.company : 'Аноним'}</span>
+                <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <div class="w-6 h-6 rounded-full ${isAnon ? 'bg-gray-400' : 'bg-blue-500'} flex items-center justify-center text-white text-xs font-bold flex-shrink-0">${client ? client.company[0] : '?'}</div>
+                        <span class="text-xs text-gray-500 truncate">${client ? client.company : 'Аноним'}</span>
                     </div>
-                    ${assignee ? `<div class="w-6 h-6 rounded-full bg-brand-red flex items-center justify-center text-white text-xs" title="${assignee.name}">${assignee.name[0]}</div>` : ''}
+                    ${assignee ? `<div class="w-6 h-6 rounded-full bg-brand-red flex items-center justify-center text-white text-xs flex-shrink-0" title="${assignee.name}">${assignee.name[0]}</div>` : ''}
                 </div>
             </div>`;
         }).join('');
@@ -357,22 +359,23 @@ function renderTickets() {
             const client = clients.find(c => c.id === t.client);
             const assignee = users.find(u => u.id === t.assignee);
             const sourceBadge = t.source === 'landing-form' ? ' <span class="text-xs px-1.5 py-0.5 rounded bg-green-100 text-green-600">сайт</span>' : '';
+            const shortId = t.id.replace('t', '').slice(-4);
             return `<tr class="hover:bg-gray-50 cursor-pointer" onclick="showTicketDetail('${t.id}')">
-                <td class="px-6 py-4 text-sm font-medium text-gray-500">${t.id.replace('t', '#')}${sourceBadge}</td>
-                <td class="px-6 py-4"><div class="font-medium text-brand-dark">${t.subject}</div></td>
-                <td class="px-6 py-4 text-sm text-gray-600">${client ? client.company : 'Аноним'}</td>
-                <td class="px-6 py-4 text-sm text-gray-600">${serviceNames[t.service] || t.service}</td>
-                <td class="px-6 py-4"><span class="px-3 py-1 text-xs font-medium rounded-full ${statusColors[t.status]}">${statusNames[t.status]}</span></td>
-                <td class="px-6 py-4 text-sm text-gray-600">${assignee ? assignee.name : '—'}</td>
-                <td class="px-6 py-4 text-sm text-gray-500">${t.created}</td>
-                <td class="px-6 py-4 text-right">
-                    <button onclick="event.stopPropagation(); deleteTicket('${t.id}')" class="p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors" title="Удалить">
+                <td class="px-4 py-3 text-sm font-medium text-gray-500 whitespace-nowrap" data-label="ID">#${shortId}${sourceBadge}</td>
+                <td class="px-4 py-3" data-label="Тема"><div class="font-medium text-brand-dark text-sm truncate max-w-[200px]">${t.subject}</div></td>
+                <td class="px-4 py-3 text-sm text-gray-600 truncate max-w-[120px]" data-label="Клиент">${client ? client.company : 'Аноним'}</td>
+                <td class="px-4 py-3 text-sm text-gray-600 hidden md:table-cell" data-label="Услуга">${serviceNames[t.service] || t.service}</td>
+                <td class="px-4 py-3" data-label="Статус"><span class="px-2 py-1 text-xs font-medium rounded-full ${statusColors[t.status]}">${statusNames[t.status]}</span></td>
+                <td class="px-4 py-3 text-sm text-gray-600 hidden lg:table-cell" data-label="Ответственный">${assignee ? assignee.name : '—'}</td>
+                <td class="px-4 py-3 text-sm text-gray-500 hidden sm:table-cell" data-label="Дата">${t.created}</td>
+                <td class="px-4 py-3 text-right" data-label="">
+                    <button onclick="event.stopPropagation(); deleteTicket('${t.id}')" class="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors" title="Удалить">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                     </button>
                 </td>
             </tr>`;
         }).join('')
-        : '<tr><td colspan="8" class="px-6 py-12 text-center text-gray-400">Заявок пока нет</td></tr>';
+        : '<tr><td colspan="8" class="px-6 py-12 text-center text-gray-400 text-sm">Заявок пока нет</td></tr>';
 }
 
 function renderClients() {

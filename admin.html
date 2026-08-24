@@ -38,6 +38,16 @@
         .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         .chat-flash { animation: chatFlash 0.5s ease; }
         @keyframes chatFlash { 0% { background-color: #FEF3C7; } 100% { background-color: transparent; } }
+        /* Responsive table */
+        .tickets-table { width: 100%; border-collapse: collapse; }
+        .tickets-table th, .tickets-table td { text-align: left; }
+        @media (max-width: 768px) {
+            .tickets-table thead { display: none; }
+            .tickets-table tr { display: block; margin-bottom: 0.75rem; border: 1px solid #e5e7eb; border-radius: 0.75rem; background: white; }
+            .tickets-table td { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 1rem; border-bottom: 1px solid #f3f4f6; }
+            .tickets-table td:last-child { border-bottom: none; }
+            .tickets-table td::before { content: attr(data-label); font-weight: 600; font-size: 0.75rem; color: #6b7280; }
+        }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
         ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
@@ -370,20 +380,20 @@
                         </div>
                     </div>
                     <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead class="bg-gray-50">
+                        <table class="tickets-table">
+                            <thead class="bg-gray-50 hidden md:table-header-group">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Тема</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Клиент</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Услуга</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Статус</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ответственный</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Дата</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Действия</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Тема</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Клиент</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Услуга</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Статус</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden lg:table-cell">Ответственный</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Дата</th>
+                                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Действия</th>
                                 </tr>
                             </thead>
-                            <tbody id="ticketsTable" class="divide-y divide-gray-50">
+                            <tbody id="ticketsTable" class="divide-y divide-gray-50 md:divide-y">
                                 <!-- Filled by JS -->
                             </tbody>
                         </table>
