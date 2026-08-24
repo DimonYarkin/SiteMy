@@ -251,6 +251,7 @@ function loadSettings() {
     document.getElementById('settingGoogleVerify').value = s.googleVerify || '';
     document.getElementById('settingWhatsapp').value = s.whatsapp || '';
     document.getElementById('settingTelegram').value = s.telegram || '';
+    document.getElementById('settingMax').value = s.max || '';
 }
 
 function saveSettings() {
@@ -264,6 +265,7 @@ function saveSettings() {
         googleVerify: document.getElementById('settingGoogleVerify').value.trim(),
         whatsapp: document.getElementById('settingWhatsapp').value.trim(),
         telegram: document.getElementById('settingTelegram').value.trim(),
+        max: document.getElementById('settingMax').value.trim(),
         updatedAt: new Date().toISOString(),
     };
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));

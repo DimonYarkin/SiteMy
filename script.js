@@ -36,6 +36,11 @@ function loadSiteSettings() {
             el.href = settings.telegram;
         });
     }
+    if (settings.max) {
+        document.querySelectorAll('[data-setting="max"]').forEach(el => {
+            el.href = settings.max;
+        });
+    }
 }
 
 // Load settings on page load
