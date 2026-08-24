@@ -46,6 +46,29 @@ function loadSiteSettings() {
 // Load settings on page load
 document.addEventListener('DOMContentLoaded', loadSiteSettings);
 
+// ==================== TELEGRAM NOTIFICATIONS ====================
+async function sendTelegramNotificationFromLanding(message) {
+    const settings = JSON.parse(localStorage.getItem('site_settings') || '{}');
+    const token = settings.tgBotToken;
+    const chatId = settings.tgChatId;
+    
+    if (!token || !chatId) return;
+    
+    try {
+        await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: chatId,
+                text: message,
+                parse_mode: 'HTML',
+            }),
+        });
+    } catch (error) {
+        console.error('Telegram notification failed:', error);
+    }
+}
+
 // ==================== PHONE FORMAT ====================
 function formatPhone(input) {
     let value = input.value.replace(/\D/g, '');
@@ -269,6 +292,18 @@ contactForm?.addEventListener('submit', (e) => {
         timestamp: new Date().toISOString(),
     });
     localStorage.setItem('crm_consent_log', JSON.stringify(consentLog));
+    
+    // Send Telegram notification
+    const serviceNames = { dev: 'Доработка', hosting: 'Размещение', marking: 'Маркировка', support: 'Обслуживание', outsourcing: 'IT-аутсорсинг', other: 'Другое' };
+    sendTelegramNotificationFromLanding(
+        `📋 <b>Новая заявка с сайта</b>\n\n` +
+        `<b>Тема:</b> ${newTicket.subject.substring(0, 80)}\n` +
+        `<b>Клиент:</b> ${client.company}\n` +
+        `<b>Телефон:</b> ${data.phone || 'Не указан'}\n` +
+        `<b>Email:</b> ${data.email || 'Не указан'}\n` +
+        `<b>Услуга:</b> ${serviceNames[newTicket.service] || newTicket.service}\n` +
+        `<b>Номер:</b> #${newTicket.id.replace('t', '').slice(-4)}`
+    );
     
     showToast('Заявка отправлена! Мы перезвоним в течение 30 минут.');
     contactForm.reset();

@@ -252,6 +252,8 @@ function loadSettings() {
     document.getElementById('settingWhatsapp').value = s.whatsapp || '';
     document.getElementById('settingTelegram').value = s.telegram || '';
     document.getElementById('settingMax').value = s.max || '';
+    document.getElementById('settingTgBotToken').value = s.tgBotToken || '';
+    document.getElementById('settingTgChatId').value = s.tgChatId || '';
 }
 
 function saveSettings() {
@@ -266,6 +268,8 @@ function saveSettings() {
         whatsapp: document.getElementById('settingWhatsapp').value.trim(),
         telegram: document.getElementById('settingTelegram').value.trim(),
         max: document.getElementById('settingMax').value.trim(),
+        tgBotToken: document.getElementById('settingTgBotToken').value.trim(),
+        tgChatId: document.getElementById('settingTgChatId').value.trim(),
         updatedAt: new Date().toISOString(),
     };
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
@@ -275,6 +279,71 @@ function saveSettings() {
 function applySettings() {
     saveSettings();
     showToast('Настройки применены. Обновите лендинг для отображения изменений.');
+}
+
+// ==================== TELEGRAM BOT ====================
+async function testTelegramBot() {
+    const token = document.getElementById('settingTgBotToken').value.trim();
+    const chatId = document.getElementById('settingTgChatId').value.trim();
+    const resultDiv = document.getElementById('tgTestResult');
+    
+    if (!token || !chatId) {
+        resultDiv.classList.remove('hidden');
+        resultDiv.className = 'p-3 rounded-xl text-sm bg-red-50 text-red-700 border border-red-200';
+        resultDiv.textContent = 'Заполните токен бота и Chat ID';
+        return;
+    }
+    
+    resultDiv.classList.remove('hidden');
+    resultDiv.className = 'p-3 rounded-xl text-sm bg-blue-50 text-blue-700 border border-blue-200';
+    resultDiv.textContent = 'Отправка тестового сообщения...';
+    
+    try {
+        const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: chatId,
+                text: '✅ Тест подключения успешен!\n\nБот 1С СервисПро подключен и готов отправлять уведомления.',
+                parse_mode: 'HTML',
+            }),
+        });
+        
+        const data = await response.json();
+        
+        if (data.ok) {
+            resultDiv.className = 'p-3 rounded-xl text-sm bg-green-50 text-green-700 border border-green-200';
+            resultDiv.textContent = '✅ Подключение успешно! Тестовое сообщение отправлено.';
+        } else {
+            resultDiv.className = 'p-3 rounded-xl text-sm bg-red-50 text-red-700 border border-red-200';
+            resultDiv.textContent = `❌ Ошибка: ${data.description || 'Неверный токен или Chat ID'}`;
+        }
+    } catch (error) {
+        resultDiv.className = 'p-3 rounded-xl text-sm bg-red-50 text-red-700 border border-red-200';
+        resultDiv.textContent = `❌ Ошибка сети: ${error.message}`;
+    }
+}
+
+async function sendTelegramNotification(message) {
+    const settings = getSettings();
+    const token = settings.tgBotToken;
+    const chatId = settings.tgChatId;
+    
+    if (!token || !chatId) return;
+    
+    try {
+        await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: chatId,
+                text: message,
+                parse_mode: 'HTML',
+            }),
+        });
+    } catch (error) {
+        console.error('Telegram notification failed:', error);
+    }
 }
 
 function renderDashboard() {
@@ -783,6 +852,7 @@ function closeChatWithStatus(status) {
 // Poll for new chat messages
 let lastAdminMessageCount = 0;
 let lastReopenedChats = new Set();
+let lastNotifiedMessageCount = 0;
 
 function pollAdminChats() {
     const chats = getChats();
@@ -818,6 +888,29 @@ function pollAdminChats() {
         }
     }
     
+    // Send Telegram notification for new client messages
+    if (totalMessages > lastNotifiedMessageCount) {
+        const newClientMessages = [];
+        chats.forEach(chat => {
+            if (chat.status === 'open' && chat.hasNewMessages) {
+                const lastMsg = chat.messages[chat.messages.length - 1];
+                if (lastMsg && lastMsg.from === 'client') {
+                    newClientMessages.push({
+                        sessionId: chat.sessionId.substring(0, 12),
+                        text: lastMsg.text.substring(0, 100),
+                    });
+                }
+            }
+        });
+        
+        if (newClientMessages.length > 0) {
+            const msgText = newClientMessages.map(m => `💬 <b>Чат ${m.sessionId}...</b>\n${m.text}`).join('\n\n');
+            sendTelegramNotification(`📩 <b>Новые сообщения в чате</b>\n\n${msgText}`);
+        }
+        
+        lastNotifiedMessageCount = totalMessages;
+    }
+    
     lastAdminMessageCount = totalMessages;
     lastReopenedChats = reopenedChats;
 }
@@ -847,11 +940,17 @@ function createTicket(e) {
     if (!clientId) { showToast('Сначала добавьте клиента'); return; }
     
     const tickets = DB.getTickets();
+    const clients = DB.getClients();
+    const client = clients.find(c => c.id === clientId);
+    const subject = document.getElementById('ticketSubject').value.trim();
+    const service = document.getElementById('ticketService').value;
+    const serviceNames = { dev: 'Доработка', hosting: 'Размещение', marking: 'Маркировка', support: 'Обслуживание', outsourcing: 'IT-аутсорсинг', other: 'Другое' };
+    
     const newTicket = {
         id: 't' + Date.now(),
         client: clientId,
-        subject: document.getElementById('ticketSubject').value.trim(),
-        service: document.getElementById('ticketService').value,
+        subject,
+        service,
         description: document.getElementById('ticketDescription').value.trim(),
         status: 'new',
         assignee: document.getElementById('ticketAssignee').value,
@@ -867,6 +966,16 @@ function createTicket(e) {
     document.getElementById('newTicketForm').reset();
     renderAll();
     showToast('Заявка создана');
+    
+    // Send Telegram notification
+    sendTelegramNotification(
+        `📋 <b>Новая заявка</b>\n\n` +
+        `<b>Тема:</b> ${subject}\n` +
+        `<b>Клиент:</b> ${client ? client.company : 'Не указан'}\n` +
+        `<b>Услуга:</b> ${serviceNames[service] || service}\n` +
+        `<b>Приоритет:</b> ${document.getElementById('ticketPriority').value}\n` +
+        `<b>Номер:</b> #${newTicket.id.replace('t', '').slice(-4)}`
+    );
 }
 
 async function createClient(e) {
