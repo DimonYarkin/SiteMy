@@ -211,9 +211,11 @@ function showSection(section) {
         users: ['Пользователи', 'Управление доступом'],
         consent: ['Журнал согласий', 'Согласия на обработку ПД'],
         livechat: ['Онлайн-чат', 'Общение с клиентами'],
+        settings: ['Настройки сайта', 'Контакты, аналитика, SEO'],
     };
     document.getElementById('pageTitle').textContent = titles[section][0];
     document.getElementById('pageSubtitle').textContent = titles[section][1];
+    if (section === 'settings') loadSettings();
     renderAll();
 }
 
@@ -229,6 +231,48 @@ function renderAll() {
     updateClientSelect();
     updateAssigneeSelect();
     updateChatBadge();
+}
+
+// ==================== SETTINGS ====================
+const SETTINGS_KEY = 'site_settings';
+
+function getSettings() {
+    return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+}
+
+function loadSettings() {
+    const s = getSettings();
+    document.getElementById('settingPhone').value = s.phone || '';
+    document.getElementById('settingEmail').value = s.email || '';
+    document.getElementById('settingAddress').value = s.address || '';
+    document.getElementById('settingGA').value = s.gaId || '';
+    document.getElementById('settingYM').value = s.ymId || '';
+    document.getElementById('settingYandexVerify').value = s.yandexVerify || '';
+    document.getElementById('settingGoogleVerify').value = s.googleVerify || '';
+    document.getElementById('settingWhatsapp').value = s.whatsapp || '';
+    document.getElementById('settingTelegram').value = s.telegram || '';
+}
+
+function saveSettings() {
+    const settings = {
+        phone: document.getElementById('settingPhone').value.trim(),
+        email: document.getElementById('settingEmail').value.trim(),
+        address: document.getElementById('settingAddress').value.trim(),
+        gaId: document.getElementById('settingGA').value.trim(),
+        ymId: document.getElementById('settingYM').value.trim(),
+        yandexVerify: document.getElementById('settingYandexVerify').value.trim(),
+        googleVerify: document.getElementById('settingGoogleVerify').value.trim(),
+        whatsapp: document.getElementById('settingWhatsapp').value.trim(),
+        telegram: document.getElementById('settingTelegram').value.trim(),
+        updatedAt: new Date().toISOString(),
+    };
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    showToast('Настройки сохранены');
+}
+
+function applySettings() {
+    saveSettings();
+    showToast('Настройки применены. Обновите лендинг для отображения изменений.');
 }
 
 function renderDashboard() {

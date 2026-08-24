@@ -1,3 +1,46 @@
+// ==================== SITE SETTINGS ====================
+function loadSiteSettings() {
+    const settings = JSON.parse(localStorage.getItem('site_settings') || '{}');
+    
+    // Update phone numbers
+    if (settings.phone) {
+        document.querySelectorAll('[data-setting="phone"]').forEach(el => {
+            el.textContent = settings.phone;
+            if (el.tagName === 'A') el.href = 'tel:' + settings.phone.replace(/\D/g, '');
+        });
+    }
+    
+    // Update email
+    if (settings.email) {
+        document.querySelectorAll('[data-setting="email"]').forEach(el => {
+            el.textContent = settings.email;
+            if (el.tagName === 'A') el.href = 'mailto:' + settings.email;
+        });
+    }
+    
+    // Update address
+    if (settings.address) {
+        document.querySelectorAll('[data-setting="address"]').forEach(el => {
+            el.textContent = settings.address;
+        });
+    }
+    
+    // Update social links
+    if (settings.whatsapp) {
+        document.querySelectorAll('[data-setting="whatsapp"]').forEach(el => {
+            el.href = settings.whatsapp;
+        });
+    }
+    if (settings.telegram) {
+        document.querySelectorAll('[data-setting="telegram"]').forEach(el => {
+            el.href = settings.telegram;
+        });
+    }
+}
+
+// Load settings on page load
+document.addEventListener('DOMContentLoaded', loadSiteSettings);
+
 // ==================== PHONE FORMAT ====================
 function formatPhone(input) {
     let value = input.value.replace(/\D/g, '');
