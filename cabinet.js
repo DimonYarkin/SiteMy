@@ -22,6 +22,13 @@ async function hashPassword(password) {
 // ==================== AUTH ====================
 let currentClient = null;
 
+function switchCabinetTab(tab) {
+    document.getElementById('cabinetLoginTab').className = tab === 'login' ? 'flex-1 py-2.5 text-sm font-medium rounded-lg bg-white text-brand-dark shadow-sm transition-all' : 'flex-1 py-2.5 text-sm font-medium rounded-lg text-gray-500 transition-all';
+    document.getElementById('cabinetRegisterTab').className = tab === 'register' ? 'flex-1 py-2.5 text-sm font-medium rounded-lg bg-white text-brand-dark shadow-sm transition-all' : 'flex-1 py-2.5 text-sm font-medium rounded-lg text-gray-500 transition-all';
+    document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
+    document.getElementById('registerForm').classList.toggle('hidden', tab !== 'register');
+}
+
 async function handleLogin(e) {
     e.preventDefault();
     
@@ -57,6 +64,65 @@ async function handleLogin(e) {
         err.classList.remove('hidden');
         setTimeout(() => err.classList.add('hidden'), 3000);
     }
+}
+
+async function handleRegister(e) {
+    e.preventDefault();
+    
+    // Check consent checkboxes
+    const consentCheckbox = document.getElementById('regConsent');
+    const termsCheckbox = document.getElementById('regTerms');
+    if (!consentCheckbox?.checked || !termsCheckbox?.checked) {
+        const err = document.getElementById('registerError');
+        err.textContent = 'Необходимо дать согласие на обработку персональных данных';
+        err.classList.remove('hidden');
+        setTimeout(() => err.classList.add('hidden'), 3000);
+        return;
+    }
+    
+    const company = document.getElementById('regCompany').value.trim();
+    const contact = document.getElementById('regContact').value.trim();
+    const phone = document.getElementById('regPhone').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const password = document.getElementById('regPassword').value;
+    const clients = DB.getClients();
+    
+    if (clients.find(c => c.email === email)) {
+        const err = document.getElementById('registerError');
+        err.textContent = 'Клиент с таким email уже существует';
+        err.classList.remove('hidden');
+        setTimeout(() => err.classList.add('hidden'), 3000);
+        return;
+    }
+    
+    const passwordHash = await hashPassword(password);
+    
+    const newClient = {
+        id: 'c' + Date.now(),
+        company,
+        contact,
+        phone,
+        email,
+        passwordHash,
+        plan: 'none',
+        created: new Date().toISOString().split('T')[0],
+        consentGiven: true,
+        consentDate: new Date().toISOString(),
+    };
+    clients.push(newClient);
+    localStorage.setItem('crm_clients', JSON.stringify(clients));
+    
+    // Log consent
+    DB.addConsentLog({
+        clientId: newClient.id,
+        action: 'registration',
+        email: email,
+        timestamp: new Date().toISOString(),
+    });
+    
+    currentClient = newClient;
+    DB.setSession({ clientId: newClient.id, loginAt: new Date().toISOString() });
+    showApp();
 }
 
 function handleLogout() {

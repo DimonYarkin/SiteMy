@@ -47,6 +47,10 @@
                 <p class="text-white/60 mt-2">Войдите для доступа к вашим заявкам</p>
             </div>
             <div class="bg-white rounded-3xl p-8 shadow-2xl">
+                <div class="flex gap-2 mb-6 bg-gray-100 rounded-xl p-1">
+                    <button onclick="switchCabinetTab('login')" id="cabinetLoginTab" class="flex-1 py-2.5 text-sm font-medium rounded-lg bg-white text-brand-dark shadow-sm transition-all">Вход</button>
+                    <button onclick="switchCabinetTab('register')" id="cabinetRegisterTab" class="flex-1 py-2.5 text-sm font-medium rounded-lg text-gray-500 transition-all">Регистрация</button>
+                </div>
                 <form id="loginForm" class="space-y-4" onsubmit="handleLogin(event)">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
@@ -62,6 +66,38 @@
                     </label>
                     <button type="submit" class="w-full py-3.5 bg-brand-red text-white font-semibold rounded-xl hover:bg-brand-red-dark transition-all shadow-lg shadow-brand-red/30">Войти</button>
                     <div id="loginError" class="hidden text-sm text-red-500 text-center bg-red-50 p-3 rounded-xl"></div>
+                </form>
+                <form id="registerForm" class="space-y-4 hidden" onsubmit="handleRegister(event)">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Компания</label>
+                        <input type="text" id="regCompany" required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 outline-none transition-all" placeholder="ООО «Ромашка»">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Контактное лицо</label>
+                        <input type="text" id="regContact" required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 outline-none transition-all" placeholder="Иван Иванов">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Телефон</label>
+                        <input type="tel" id="regPhone" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 outline-none transition-all" placeholder="+7 (999) 123-45-67">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+                        <input type="email" id="regEmail" required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 outline-none transition-all" placeholder="your@email.ru">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Пароль</label>
+                        <input type="password" id="regPassword" required minlength="6" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 outline-none transition-all" placeholder="Минимум 6 символов">
+                    </div>
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input type="checkbox" id="regConsent" required class="w-4 h-4 mt-0.5 rounded border-gray-300 text-brand-red focus:ring-brand-red">
+                        <span class="text-sm text-gray-600">Я даю <a href="privacy.html" target="_blank" class="text-brand-red hover:underline">согласие на обработку персональных данных</a> в соответствии с 152-ФЗ</span>
+                    </label>
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input type="checkbox" id="regTerms" required class="w-4 h-4 mt-0.5 rounded border-gray-300 text-brand-red focus:ring-brand-red">
+                        <span class="text-sm text-gray-600">Я ознакомился с <a href="privacy.html" target="_blank" class="text-brand-red hover:underline">Политикой конфиденциальности</a></span>
+                    </label>
+                    <button type="submit" class="w-full py-3.5 bg-brand-red text-white font-semibold rounded-xl hover:bg-brand-red-dark transition-all shadow-lg shadow-brand-red/30">Зарегистрироваться</button>
+                    <div id="registerError" class="hidden text-sm text-red-500 text-center bg-red-50 p-3 rounded-xl"></div>
                 </form>
                 <div class="mt-4 text-center space-y-2">
                     <a href="privacy.html" target="_blank" class="text-sm text-gray-500 hover:text-brand-red transition-colors block">Политика конфиденциальности</a>
