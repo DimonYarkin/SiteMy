@@ -253,10 +253,16 @@ function loadSettings() {
     document.getElementById('settingTelegram').value = s.telegram || '';
     document.getElementById('settingMax').value = s.max || '';
     document.getElementById('settingTgBotToken').value = s.tgBotToken || '';
-    document.getElementById('settingTgChatId').value = s.tgChatId || '';
+    
+    // Show Chat ID if already saved
+    if (s.tgChatId) {
+        document.getElementById('tgChatIdDisplay').classList.remove('hidden');
+        document.getElementById('tgChatIdValue').textContent = s.tgChatId;
+    }
 }
 
 function saveSettings() {
+    const existing = getSettings();
     const settings = {
         phone: document.getElementById('settingPhone').value.trim(),
         email: document.getElementById('settingEmail').value.trim(),
@@ -269,7 +275,7 @@ function saveSettings() {
         telegram: document.getElementById('settingTelegram').value.trim(),
         max: document.getElementById('settingMax').value.trim(),
         tgBotToken: document.getElementById('settingTgBotToken').value.trim(),
-        tgChatId: document.getElementById('settingTgChatId').value.trim(),
+        tgChatId: existing.tgChatId || '', // Preserve existing Chat ID
         updatedAt: new Date().toISOString(),
     };
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
@@ -282,15 +288,106 @@ function applySettings() {
 }
 
 // ==================== TELEGRAM BOT ====================
-async function testTelegramBot() {
+async function connectTelegramBot() {
     const token = document.getElementById('settingTgBotToken').value.trim();
-    const chatId = document.getElementById('settingTgChatId').value.trim();
     const resultDiv = document.getElementById('tgTestResult');
+    const chatIdDisplay = document.getElementById('tgChatIdDisplay');
+    const chatIdValue = document.getElementById('tgChatIdValue');
     
-    if (!token || !chatId) {
+    if (!token) {
         resultDiv.classList.remove('hidden');
         resultDiv.className = 'p-3 rounded-xl text-sm bg-red-50 text-red-700 border border-red-200';
-        resultDiv.textContent = 'Заполните токен бота и Chat ID';
+        resultDiv.textContent = 'Введите токен бота';
+        return;
+    }
+    
+    resultDiv.classList.remove('hidden');
+    resultDiv.className = 'p-3 rounded-xl text-sm bg-blue-50 text-blue-700 border border-blue-200';
+    resultDiv.textContent = 'Проверка токена...';
+    
+    try {
+        // Step 1: Verify bot token
+        const meResponse = await fetch(`https://api.telegram.org/bot${token}/getMe`);
+        const meData = await meResponse.json();
+        
+        if (!meData.ok) {
+            resultDiv.className = 'p-3 rounded-xl text-sm bg-red-50 text-red-700 border border-red-200';
+            resultDiv.textContent = '❌ Неверный токен бота';
+            return;
+        }
+        
+        const botName = meData.result.username;
+        resultDiv.textContent = `Бот @${botName} найден. Поиск Chat ID...`;
+        
+        // Step 2: Get updates to find Chat ID
+        const updatesResponse = await fetch(`https://api.telegram.org/bot${token}/getUpdates?limit=10`);
+        const updatesData = await updatesResponse.json();
+        
+        if (!updatesData.ok || !updatesData.result || updatesData.result.length === 0) {
+            resultDiv.className = 'p-3 rounded-xl text-sm bg-yellow-50 text-yellow-700 border border-yellow-200';
+            resultDiv.innerHTML = `⚠️ Бот @${botName} найден, но нет сообщений.<br><strong>Откройте бота в Telegram и отправьте ему /start</strong>, затем нажмите «Подключить бота» снова.`;
+            return;
+        }
+        
+        // Find the most recent chat ID
+        const chatId = updatesData.result[updatesData.result.length - 1].message?.chat?.id;
+        
+        if (!chatId) {
+            resultDiv.className = 'p-3 rounded-xl text-sm bg-yellow-50 text-yellow-700 border border-yellow-200';
+            resultDiv.innerHTML = `⚠️ Не удалось определить Chat ID. Откройте бота в Telegram и отправьте ему сообщение.`;
+            return;
+        }
+        
+        // Step 3: Save settings
+        document.getElementById('settingTgBotToken').value = token;
+        saveSettings();
+        
+        // Save chat ID to settings
+        const settings = getSettings();
+        settings.tgChatId = chatId.toString();
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+        
+        // Show success
+        chatIdDisplay.classList.remove('hidden');
+        chatIdValue.textContent = chatId;
+        
+        resultDiv.className = 'p-3 rounded-xl text-sm bg-green-50 text-green-700 border border-green-200';
+        resultDiv.innerHTML = `✅ Бот <strong>@${botName}</strong> подключен! Chat ID: <code>${chatId}</code>`;
+        
+        // Step 4: Send test message
+        await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: chatId,
+                text: '✅ Бот 1С СервисПро подключен!\n\nВы будете получать уведомления о:\n• Новых заявках\n• Сообщениях в онлайн-чате\n• Возобновленных чатах',
+                parse_mode: 'HTML',
+            }),
+        });
+        
+    } catch (error) {
+        resultDiv.className = 'p-3 rounded-xl text-sm bg-red-50 text-red-700 border border-red-200';
+        resultDiv.textContent = `❌ Ошибка: ${error.message}`;
+    }
+}
+
+async function testTelegramBot() {
+    const settings = getSettings();
+    const token = settings.tgBotToken || document.getElementById('settingTgBotToken').value.trim();
+    const chatId = settings.tgChatId;
+    const resultDiv = document.getElementById('tgTestResult');
+    
+    if (!token) {
+        resultDiv.classList.remove('hidden');
+        resultDiv.className = 'p-3 rounded-xl text-sm bg-red-50 text-red-700 border border-red-200';
+        resultDiv.textContent = 'Сначала подключите бота';
+        return;
+    }
+    
+    if (!chatId) {
+        resultDiv.classList.remove('hidden');
+        resultDiv.className = 'p-3 rounded-xl text-sm bg-yellow-50 text-yellow-700 border border-yellow-200';
+        resultDiv.textContent = 'Chat ID не найден. Нажмите «Подключить бота»';
         return;
     }
     
@@ -304,7 +401,7 @@ async function testTelegramBot() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 chat_id: chatId,
-                text: '✅ Тест подключения успешен!\n\nБот 1С СервисПро подключен и готов отправлять уведомления.',
+                text: '🧪 Тест подключения!\n\nБот 1С СервисПро работает корректно.',
                 parse_mode: 'HTML',
             }),
         });
@@ -313,10 +410,10 @@ async function testTelegramBot() {
         
         if (data.ok) {
             resultDiv.className = 'p-3 rounded-xl text-sm bg-green-50 text-green-700 border border-green-200';
-            resultDiv.textContent = '✅ Подключение успешно! Тестовое сообщение отправлено.';
+            resultDiv.textContent = '✅ Тестовое сообщение отправлено! Проверьте Telegram.';
         } else {
             resultDiv.className = 'p-3 rounded-xl text-sm bg-red-50 text-red-700 border border-red-200';
-            resultDiv.textContent = `❌ Ошибка: ${data.description || 'Неверный токен или Chat ID'}`;
+            resultDiv.textContent = `❌ Ошибка: ${data.description}`;
         }
     } catch (error) {
         resultDiv.className = 'p-3 rounded-xl text-sm bg-red-50 text-red-700 border border-red-200';
