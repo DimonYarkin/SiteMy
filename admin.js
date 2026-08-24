@@ -12,6 +12,13 @@ const DB = {
     addConsentLog(entry) { const log = this.getConsentLog(); log.push(entry); localStorage.setItem('crm_consent_log', JSON.stringify(log)); },
 };
 
+// ==================== UTILS ====================
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // ==================== PHONE FORMAT ====================
 function formatPhone(input) {
     let value = input.value.replace(/\D/g, '');
@@ -194,6 +201,7 @@ function showSection(section) {
         clients: ['Клиенты', 'Управление клиентами'],
         users: ['Пользователи', 'Управление доступом'],
         consent: ['Журнал согласий', 'Согласия на обработку ПД'],
+        livechat: ['Онлайн-чат', 'Общение с клиентами'],
     };
     document.getElementById('pageTitle').textContent = titles[section][0];
     document.getElementById('pageSubtitle').textContent = titles[section][1];
@@ -208,8 +216,10 @@ function renderAll() {
     renderClients();
     renderUsers();
     renderConsentLog();
+    renderChatList();
     updateClientSelect();
     updateAssigneeSelect();
+    updateChatBadge();
 }
 
 function renderDashboard() {
@@ -477,6 +487,232 @@ function exportConsentLog() {
     URL.revokeObjectURL(url);
     showToast('Журнал экспортирован');
 }
+
+// ==================== LIVE CHAT ====================
+let activeChatSessionId = null;
+
+function getChats() {
+    return JSON.parse(localStorage.getItem('crm_chats') || '[]');
+}
+
+function setChats(chats) {
+    localStorage.setItem('crm_chats', JSON.stringify(chats));
+}
+
+function updateChatBadge() {
+    const chats = getChats();
+    const openChats = chats.filter(c => c.status === 'open' && c.hasNewMessages);
+    const badge = document.getElementById('chatBadgeNav');
+    if (badge) {
+        if (openChats.length > 0) {
+            badge.classList.remove('hidden');
+            badge.textContent = openChats.length;
+        } else {
+            badge.classList.add('hidden');
+        }
+    }
+}
+
+function renderChatList() {
+    const chats = getChats();
+    const chatList = document.getElementById('chatList');
+    if (!chatList) return;
+    
+    const openChats = chats.filter(c => c.status === 'open').sort((a, b) => new Date(b.lastActivity) - new Date(a.lastActivity));
+    const closedChats = chats.filter(c => c.status !== 'open').sort((a, b) => new Date(b.lastActivity) - new Date(a.lastActivity)).slice(0, 10);
+    
+    chatList.innerHTML = '';
+    
+    if (openChats.length === 0 && closedChats.length === 0) {
+        chatList.innerHTML = '<div class="p-6 text-center text-gray-400 text-sm">Нет активных чатов</div>';
+        return;
+    }
+    
+    if (openChats.length > 0) {
+        const header = document.createElement('div');
+        header.className = 'px-4 py-2 bg-gray-50 text-xs font-medium text-gray-500 uppercase';
+        header.textContent = 'Активные';
+        chatList.appendChild(header);
+        
+        openChats.forEach(chat => {
+            chatList.appendChild(createChatListItem(chat, false));
+        });
+    }
+    
+    if (closedChats.length > 0) {
+        const header = document.createElement('div');
+        header.className = 'px-4 py-2 bg-gray-50 text-xs font-medium text-gray-500 uppercase';
+        header.textContent = 'Завершенные';
+        chatList.appendChild(header);
+        
+        closedChats.forEach(chat => {
+            chatList.appendChild(createChatListItem(chat, true));
+        });
+    }
+}
+
+function createChatListItem(chat, isClosed) {
+    const item = document.createElement('div');
+    item.className = `px-4 py-3 border-b border-gray-50 cursor-pointer hover:bg-gray-50 transition-colors ${activeChatSessionId === chat.sessionId ? 'bg-red-50 border-l-2 border-l-brand-red' : ''}`;
+    
+    const lastMsg = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1] : null;
+    const lastMsgText = lastMsg ? lastMsg.text.substring(0, 50) + (lastMsg.text.length > 50 ? '...' : '') : 'Нет сообщений';
+    const lastMsgTime = lastMsg ? lastMsg.time : '';
+    const unread = chat.hasNewMessages && !isClosed;
+    
+    const statusBadge = isClosed 
+        ? `<span class="text-xs px-1.5 py-0.5 rounded ${chat.closeStatus === 'resolved' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'}">${chat.closeStatus === 'resolved' ? 'Решен' : 'Общение'}</span>`
+        : (unread ? '<span class="w-2 h-2 bg-yellow-400 rounded-full"></span>' : '');
+    
+    item.innerHTML = `
+        <div class="flex items-center justify-between mb-1">
+            <span class="text-sm font-medium text-brand-dark">${chat.sessionId.substring(0, 12)}...</span>
+            <div class="flex items-center gap-2">
+                ${statusBadge}
+                <span class="text-xs text-gray-400">${lastMsgTime}</span>
+            </div>
+        </div>
+        <p class="text-xs text-gray-500 truncate">${lastMsgText}</p>
+    `;
+    
+    item.onclick = () => openChat(chat.sessionId);
+    return item;
+}
+
+function openChat(sessionId) {
+    activeChatSessionId = sessionId;
+    const chats = getChats();
+    const chat = chats.find(c => c.sessionId === sessionId);
+    if (!chat) return;
+    
+    // Mark as read
+    chat.hasNewMessages = false;
+    setChats(chats);
+    
+    // Update header
+    document.getElementById('chatWindowTitle').textContent = `Чат ${sessionId.substring(0, 16)}...`;
+    document.getElementById('chatWindowSubtitle').textContent = `${chat.messages.length} сообщений · ${chat.status === 'open' ? 'Активен' : 'Завершен'}`;
+    document.getElementById('chatWindowActions').classList.toggle('hidden', chat.status !== 'open');
+    document.getElementById('chatWindowInput').classList.toggle('hidden', chat.status !== 'open');
+    
+    // Render messages
+    const messagesDiv = document.getElementById('chatWindowMessages');
+    messagesDiv.innerHTML = '';
+    
+    chat.messages.forEach(msg => {
+        const isClient = msg.from === 'client';
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `mb-3 ${isClient ? '' : 'text-right'}`;
+        msgDiv.innerHTML = `
+            <div class="text-xs text-gray-400 mb-1">${isClient ? 'Клиент' : 'Менеджер'} · ${msg.time}</div>
+            <div class="inline-block px-4 py-2.5 rounded-2xl text-sm ${isClient ? 'bg-white text-gray-700 rounded-bl-md' : 'bg-brand-red text-white rounded-br-md'}">${escapeHtml(msg.text)}</div>
+        `;
+        messagesDiv.appendChild(msgDiv);
+    });
+    
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    
+    // Update chat list
+    renderChatList();
+    updateChatBadge();
+}
+
+function sendManagerMessage() {
+    const input = document.getElementById('managerChatInput');
+    const text = input.value.trim();
+    if (!text || !activeChatSessionId) return;
+    
+    const chats = getChats();
+    const chat = chats.find(c => c.sessionId === activeChatSessionId);
+    if (!chat || chat.status !== 'open') return;
+    
+    const time = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    
+    chat.messages.push({
+        from: 'manager',
+        text,
+        time,
+        timestamp: new Date().toISOString(),
+        managerId: currentUser.id,
+    });
+    chat.lastActivity = new Date().toISOString();
+    chat.assignedTo = currentUser.id;
+    
+    setChats(chats);
+    openChat(activeChatSessionId);
+    
+    input.value = '';
+}
+
+function closeChatWithStatus(status) {
+    if (!activeChatSessionId) return;
+    
+    const chats = getChats();
+    const chat = chats.find(c => c.sessionId === activeChatSessionId);
+    if (!chat) return;
+    
+    const statusNames = { resolved: 'Вопрос решен', followup: 'Требуется дальнейшее общение' };
+    const comment = prompt(`Комментарий к закрытию чата (${statusNames[status]}):`);
+    if (comment === null) return; // Cancelled
+    
+    chat.status = 'closed';
+    chat.closeStatus = status;
+    chat.closeComment = comment;
+    chat.closedAt = new Date().toISOString();
+    chat.closedBy = currentUser.id;
+    
+    // If followup required, create a ticket
+    if (status === 'followup') {
+        const tickets = DB.getTickets();
+        const newTicket = {
+            id: 't' + Date.now(),
+            client: '',
+            subject: 'Требуется общение: ' + chat.sessionId.substring(0, 16),
+            service: 'other',
+            description: [
+                'Создано автоматически из онлайн-чата.',
+                '',
+                'Комментарий: ' + comment,
+                '',
+                '--- История чата ---',
+                ...chat.messages.map(m => `[${m.time}] ${m.from === 'client' ? 'Клиент' : 'Менеджер'}: ${m.text}`),
+            ].join('\n'),
+            status: 'new',
+            assignee: chat.assignedTo || '',
+            priority: 'medium',
+            created: new Date().toISOString().split('T')[0],
+            updated: new Date().toISOString().split('T')[0],
+            messages: comment ? [{ from: currentUser.id, text: comment, time: new Date().toLocaleString('ru-RU') }] : [],
+            source: 'livechat',
+        };
+        tickets.push(newTicket);
+        DB.setTickets(tickets);
+        showToast('Создана заявка #' + newTicket.id.replace('t', '') + ' для дальнейшего общения');
+    } else {
+        showToast('Чат закрыт: ' + statusNames[status]);
+    }
+    
+    setChats(chats);
+    openChat(activeChatSessionId);
+    renderChatList();
+}
+
+// Poll for new chat messages
+setInterval(() => {
+    const chats = getChats();
+    const hasNew = chats.some(c => c.status === 'open' && c.hasNewMessages);
+    updateChatBadge();
+    
+    // Show notification toast for new messages
+    if (hasNew && !document.getElementById('section-livechat')?.classList.contains('hidden')) {
+        // Don't show toast if we're already on the chat page
+    } else if (hasNew) {
+        const newChat = chats.find(c => c.status === 'open' && c.hasNewMessages);
+        if (newChat) {
+            showToast('Новое сообщение в онлайн-чате!');
+        }
+    }
+}, 30000); // Check every 30 seconds
 
 // ==================== SELECTS ====================
 function updateClientSelect() {

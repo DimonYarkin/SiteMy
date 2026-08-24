@@ -292,6 +292,26 @@ function showToast(text) {
 // ==================== CHAT WIDGET ====================
 let chatOpen = false;
 
+// ==================== ONLINE CHAT ====================
+const CHAT_STORAGE_KEY = 'crm_chats';
+
+function getChats() {
+    return JSON.parse(localStorage.getItem(CHAT_STORAGE_KEY) || '[]');
+}
+
+function setChats(chats) {
+    localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chats));
+}
+
+function getOrCreateChatSession() {
+    let sessionId = sessionStorage.getItem('chat_session_id');
+    if (!sessionId) {
+        sessionId = 'chat_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        sessionStorage.setItem('chat_session_id', sessionId);
+    }
+    return sessionId;
+}
+
 function toggleChat() {
     chatOpen = !chatOpen;
     const panel = document.getElementById('chatPanel');
@@ -300,36 +320,105 @@ function toggleChat() {
     if (chatOpen) {
         panel.classList.remove('hidden');
         icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>';
+        loadChatMessages();
     } else {
         panel.classList.add('hidden');
         icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>';
     }
 }
 
+function loadChatMessages() {
+    const sessionId = getOrCreateChatSession();
+    const chats = getChats();
+    const chat = chats.find(c => c.sessionId === sessionId);
+    const messagesDiv = document.getElementById('chatMessages');
+    
+    if (!messagesDiv) return;
+    
+    // Clear messages
+    messagesDiv.innerHTML = '';
+    
+    // Add greeting
+    const greeting = document.createElement('div');
+    greeting.className = 'mb-3';
+    greeting.innerHTML = '<div class="inline-block px-4 py-2 bg-white rounded-2xl rounded-bl-none text-sm text-gray-700 shadow-sm">Здравствуйте! Напишите ваш вопрос, и наш специалист ответит в ближайшее время.</div>';
+    messagesDiv.appendChild(greeting);
+    
+    // Load existing messages
+    if (chat && chat.messages) {
+        chat.messages.forEach(msg => {
+            appendChatMessage(msg.text, msg.from === 'client', msg.time, false);
+        });
+    }
+    
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+function appendChatMessage(text, isClient, time, scroll = true) {
+    const messagesDiv = document.getElementById('chatMessages');
+    if (!messagesDiv) return;
+    
+    const msg = document.createElement('div');
+    msg.className = `mb-3 ${isClient ? 'text-right' : ''}`;
+    
+    const timeStr = time || new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    
+    if (isClient) {
+        msg.innerHTML = `<div class="inline-block px-4 py-2 bg-brand-red text-white rounded-2xl rounded-br-none text-sm">${escapeHtml(text)}</div>
+            <div class="text-xs text-gray-400 mt-1">${timeStr}</div>`;
+    } else {
+        msg.innerHTML = `<div class="inline-block px-4 py-2 bg-white rounded-2xl rounded-bl-none text-sm text-gray-700 shadow-sm">${escapeHtml(text)}</div>
+            <div class="text-xs text-gray-400 mt-1">Менеджер · ${timeStr}</div>`;
+    }
+    
+    messagesDiv.appendChild(msg);
+    if (scroll) messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
 function sendChat() {
     const input = document.getElementById('chatInput');
-    const messages = document.getElementById('chatMessages');
     const text = input.value.trim();
     
     if (!text) return;
     
-    // User message
-    const userMsg = document.createElement('div');
-    userMsg.className = 'mb-3 text-right';
-    userMsg.innerHTML = `<div class="inline-block px-4 py-2 bg-brand-red text-white rounded-2xl rounded-br-none text-sm">${escapeHtml(text)}</div>`;
-    messages.appendChild(userMsg);
+    const sessionId = getOrCreateChatSession();
+    const chats = getChats();
+    let chat = chats.find(c => c.sessionId === sessionId);
+    
+    if (!chat) {
+        chat = {
+            sessionId,
+            status: 'open',
+            assignedTo: null,
+            messages: [],
+            createdAt: new Date().toISOString(),
+            lastActivity: new Date().toISOString(),
+        };
+        chats.push(chat);
+    }
+    
+    const time = new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    
+    chat.messages.push({
+        from: 'client',
+        text,
+        time,
+        timestamp: new Date().toISOString(),
+    });
+    chat.lastActivity = new Date().toISOString();
+    chat.hasNewMessages = true;
+    
+    setChats(chats);
+    appendChatMessage(text, true, time);
     
     input.value = '';
-    messages.scrollTop = messages.scrollHeight;
     
-    // Bot response
-    setTimeout(() => {
-        const botMsg = document.createElement('div');
-        botMsg.className = 'mb-3';
-        botMsg.innerHTML = `<div class="inline-block px-4 py-2 bg-white rounded-2xl rounded-bl-none text-sm text-gray-700 shadow-sm">Спасибо за сообщение! Наш специалист свяжется с вами в ближайшее время.</div>`;
-        messages.appendChild(botMsg);
-        messages.scrollTop = messages.scrollHeight;
-    }, 1000);
+    // Show auto-response if no manager assigned yet
+    if (!chat.assignedTo) {
+        setTimeout(() => {
+            appendChatMessage('Спасибо! Ваше сообщение передано специалисту. Ожидайте ответа.', false);
+        }, 1500);
+    }
 }
 
 function escapeHtml(text) {
@@ -337,6 +426,28 @@ function escapeHtml(text) {
     div.textContent = text;
     return div.innerHTML;
 }
+
+// Poll for new messages from manager
+setInterval(() => {
+    const sessionId = sessionStorage.getItem('chat_session_id');
+    if (!sessionId || chatOpen) return;
+    
+    const chats = getChats();
+    const chat = chats.find(c => c.sessionId === sessionId);
+    if (!chat || !chat.messages.length) return;
+    
+    const lastMsg = chat.messages[chat.messages.length - 1];
+    if (lastMsg.from === 'manager') {
+        // Show notification badge on chat button
+        const chatBtn = document.querySelector('#chatWidget button');
+        if (chatBtn && !chatBtn.querySelector('.chat-badge')) {
+            const badge = document.createElement('div');
+            badge.className = 'chat-badge absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center text-xs font-bold text-brand-dark';
+            badge.textContent = '!';
+            chatBtn.appendChild(badge);
+        }
+    }
+}, 5000);
 
 // ==================== i18n ====================
 const translations = {
