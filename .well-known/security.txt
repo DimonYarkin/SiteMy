@@ -1,0 +1,4 @@
+Contact: mailto:info@1cservice.pro
+Expires: 2025-12-31T23:59:59.000Z
+Preferred-Languages: ru, en
+Canonical: https://1cservice.pro/.well-known/security.txt

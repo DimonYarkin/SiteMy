@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Build
+dist/
+build/
+.cache/
+
+# mimocode
+.mimocode/

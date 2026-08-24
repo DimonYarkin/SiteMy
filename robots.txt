@@ -1,0 +1,31 @@
+# robots.txt for 1cservice.pro
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /admin.js
+Disallow: /cabinet.html
+Disallow: /cabinet.js
+Disallow: /assets/
+Disallow: /*.json$
+
+# Sitemaps
+Sitemap: https://1cservice.pro/sitemap.xml
+
+# Crawl-delay for Yandex
+User-agent: Yandex
+Crawl-delay: 1
+Allow: /
+Disallow: /admin.html
+Disallow: /cabinet.html
+
+# Google
+User-agent: Googlebot
+Allow: /
+Disallow: /admin.html
+Disallow: /cabinet.html
+
+# Bing
+User-agent: Bingbot
+Allow: /
+Disallow: /admin.html
+Disallow: /cabinet.html

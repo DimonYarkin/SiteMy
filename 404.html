@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 — Страница не найдена | 1С СервисПро</title>
+    <meta name="description" content="Запрашиваемая страница не найдена. Вернитесь на главную страницу 1С СервисПро.">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'brand-red': '#E31E24',
+                        'brand-red-dark': '#C41A1F',
+                        'brand-orange': '#F5A623',
+                        'brand-dark': '#1A1A2E',
+                        'brand-gray': '#2D2D44',
+                    },
+                    fontFamily: { 'sans': ['Inter', 'system-ui', 'sans-serif'] },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-white text-gray-900 font-sans antialiased">
+    <div class="min-h-screen flex items-center justify-center px-4">
+        <div class="text-center max-w-lg">
+            <div class="mb-8">
+                <div class="text-9xl font-extrabold text-brand-red/20">404</div>
+            </div>
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-brand-dark mb-4">Страница не найдена</h1>
+            <p class="text-lg text-gray-600 mb-8">К сожалению, запрашиваемая страница не существует или была перемещена.</p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="/" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-brand-red text-white font-semibold rounded-2xl hover:bg-brand-red-dark transition-all shadow-lg shadow-brand-red/30">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    На главную
+                </a>
+                <a href="/#contact" class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-brand-red font-semibold rounded-2xl border-2 border-brand-red hover:bg-brand-red hover:text-white transition-all">
+                    Связаться с нами
+                </a>
+            </div>
+            <div class="mt-12 text-sm text-gray-400">
+                <p>Если вы считаете, что это ошибка, пожалуйста, <a href="/#contact" class="text-brand-red hover:underline">сообщите нам</a>.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

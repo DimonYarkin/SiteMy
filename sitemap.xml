@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+    <url>
+        <loc>https://1cservice.pro/</loc>
+        <lastmod>2024-08-24</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>1.0</priority>
+        <xhtml:link rel="alternate" hreflang="ru" href="https://1cservice.pro/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://1cservice.pro/en/"/>
+    </url>
+    <url>
+        <loc>https://1cservice.pro/#services</loc>
+        <lastmod>2024-08-24</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.9</priority>
+    </url>
+    <url>
+        <loc>https://1cservice.pro/#pricing</loc>
+        <lastmod>2024-08-24</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>
+    <url>
+        <loc>https://1cservice.pro/#contacts</loc>
+        <lastmod>2024-08-24</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://1cservice.pro/en/</loc>
+        <lastmod>2024-08-24</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.6</priority>
+        <xhtml:link rel="alternate" hreflang="ru" href="https://1cservice.pro/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://1cservice.pro/en/"/>
+    </url>
+</urlset>

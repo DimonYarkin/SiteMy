@@ -1,0 +1,122 @@
+/* Scroll animations */
+.animate-on-scroll {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.animate-on-scroll.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Header scroll effect */
+.header-scrolled {
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+}
+
+/* Service card hover glow */
+.service-card::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 1rem;
+    background: linear-gradient(135deg, #E31E24, #F5A623);
+    opacity: 0;
+    transition: opacity 0.5s;
+    z-index: -1;
+}
+.service-card:hover::before {
+    opacity: 0.1;
+}
+
+/* Smooth button press */
+.cta-primary:active, .cta-secondary:active {
+    transform: scale(0.98);
+}
+
+/* Carousel dots */
+.carousel-dot.active {
+    width: 2rem;
+    border-radius: 9999px;
+    background: #E31E24;
+}
+
+/* Form focus glow */
+input:focus, select:focus, textarea:focus {
+    box-shadow: 0 0 0 4px rgba(227, 30, 36, 0.1);
+}
+
+/* Toast animation */
+.toast-show {
+    transform: translateY(0) !important;
+    opacity: 1 !important;
+}
+
+/* Gradient text */
+.gradient-text {
+    background: linear-gradient(135deg, #E31E24, #F5A623);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Pulse animation for badge */
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+.animate-pulse {
+    animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* Mobile menu transition */
+#mobileMenu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+#mobileMenu.open {
+    max-height: 500px;
+}
+
+/* Pricing card hover */
+#pricing .group:hover {
+    transform: translateY(-4px);
+}
+
+/* Chat widget bounce */
+@keyframes chat-bounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+#chatWidget button:hover {
+    animation: chat-bounce 0.3s ease;
+}
+
+/* Selection color */
+::selection {
+    background: rgba(227, 30, 36, 0.2);
+    color: #1A1A2E;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}
+
+/* Print styles */
+@media print {
+    header, #chatWidget, .cta-primary, .cta-secondary {
+        display: none !important;
+    }
+}

@@ -1,0 +1,25 @@
+{
+    "name": "1С СервисПро — Полное IT-обслуживание 1С",
+    "short_name": "1С СервисПро",
+    "description": "Доработка, обслуживание конфигураций 1С и размещение инфраструктуры на внешних серверах",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#E31E24",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='48' fill='%23E31E24'/%3E%3Ctext x='96' y='130' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold' font-size='96'%3E1%D0%A1%3C/text%3E%3C/svg%3E",
+            "sizes": "192x192",
+            "type": "image/svg+xml"
+        },
+        {
+            "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='128' fill='%23E31E24'/%3E%3Ctext x='256' y='340' text-anchor='middle' fill='white' font-family='Arial' font-weight='bold' font-size='256'%3E1%D0%A1%3C/text%3E%3C/svg%3E",
+            "sizes": "512x512",
+            "type": "image/svg+xml"
+        }
+    ],
+    "categories": ["business", "productivity"],
+    "lang": "ru",
+    "dir": "ltr"
+}

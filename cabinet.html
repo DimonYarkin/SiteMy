@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет — 1С СервисПро</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'brand-red': '#E31E24',
+                        'brand-red-dark': '#C41A1F',
+                        'brand-orange': '#F5A623',
+                        'brand-dark': '#1A1A2E',
+                        'brand-gray': '#2D2D44',
+                    },
+                    fontFamily: { 'sans': ['Inter', 'system-ui', 'sans-serif'] },
+                }
+            }
+        }
+    </script>
+    <style>
+        .fade-in { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans antialiased">
+
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-dark via-brand-gray to-brand-dark px-4">
+        <div class="w-full max-w-md">
+            <div class="text-center mb-8">
+                <a href="index.html" class="inline-flex items-center gap-2 mb-6">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-red to-brand-orange flex items-center justify-center text-white font-bold text-xl">1С</div>
+                    <span class="text-2xl font-bold text-white">Сервис<span class="text-brand-red">Про</span></span>
+                </a>
+                <h1 class="text-2xl font-bold text-white">Личный кабинет</h1>
+                <p class="text-white/60 mt-2">Войдите для доступа к вашим заявкам</p>
+            </div>
+            <div class="bg-white rounded-3xl p-8 shadow-2xl">
+                <form id="loginForm" class="space-y-4" onsubmit="handleLogin(event)">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+                        <input type="email" id="loginEmail" required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 outline-none transition-all" placeholder="your@email.ru">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Пароль</label>
+                        <input type="password" id="loginPassword" required class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-brand-red focus:ring-2 focus:ring-brand-red/20 outline-none transition-all" placeholder="••••••••">
+                    </div>
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input type="checkbox" id="loginConsent" required class="w-4 h-4 mt-0.5 rounded border-gray-300 text-brand-red focus:ring-brand-red">
+                        <span class="text-sm text-gray-600">Я даю <a href="privacy.html" target="_blank" class="text-brand-red hover:underline">согласие на обработку персональных данных</a></span>
+                    </label>
+                    <button type="submit" class="w-full py-3.5 bg-brand-red text-white font-semibold rounded-xl hover:bg-brand-red-dark transition-all shadow-lg shadow-brand-red/30">Войти</button>
+                    <div id="loginError" class="hidden text-sm text-red-500 text-center bg-red-50 p-3 rounded-xl"></div>
+                </form>
+                <div class="mt-4 text-center space-y-2">
+                    <a href="privacy.html" target="_blank" class="text-sm text-gray-500 hover:text-brand-red transition-colors block">Политика конфиденциальности</a>
+                    <a href="index.html" class="text-sm text-gray-500 hover:text-brand-red transition-colors block">← Вернуться на сайт</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="app" class="hidden">
+        <!-- HEADER -->
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <a href="index.html" class="flex items-center gap-2">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-red to-brand-orange flex items-center justify-center text-white font-bold text-lg">1С</div>
+                        <span class="text-xl font-bold text-brand-dark hidden sm:block">Сервис<span class="text-brand-red">Про</span></span>
+                    </a>
+                    <nav class="hidden md:flex items-center gap-1">
+                        <button onclick="showSection('profile')" class="nav-btn px-4 py-2 rounded-xl text-sm font-medium text-gray-600 hover:text-brand-red hover:bg-red-50 transition-all" data-section="profile">Профиль</button>
+                        <button onclick="showSection('tickets')" class="nav-btn px-4 py-2 rounded-xl text-sm font-medium text-gray-600 hover:text-brand-red hover:bg-red-50 transition-all" data-section="tickets">Мои заявки</button>
+                    </nav>
+                    <div class="flex items-center gap-3">
+                        <div class="hidden sm:flex items-center gap-2">
+                            <div id="userAvatar" class="w-9 h-9 rounded-full bg-brand-red flex items-center justify-center text-white text-sm font-bold">АК</div>
+                            <span id="userName" class="text-sm font-medium text-gray-700">Клиент</span>
+                        </div>
+                        <button onclick="handleLogout()" class="p-2 rounded-xl hover:bg-gray-100 transition-colors" title="Выйти">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                        </button>
+                        <!-- Mobile menu -->
+                        <button id="burger" class="md:hidden p-2 rounded-xl hover:bg-gray-100 transition-colors" onclick="toggleMobileMenu()">
+                            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path id="burgerIcon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Mobile menu -->
+            <div id="mobileMenu" class="md:hidden hidden border-t border-gray-100 bg-white">
+                <div class="px-4 py-3 space-y-1">
+                    <button onclick="showSection('profile'); toggleMobileMenu()" class="w-full px-4 py-3 rounded-xl text-left text-gray-700 hover:bg-red-50 hover:text-brand-red font-medium transition-all">Профиль</button>
+                    <button onclick="showSection('tickets'); toggleMobileMenu()" class="w-full px-4 py-3 rounded-xl text-left text-gray-700 hover:bg-red-50 hover:text-brand-red font-medium transition-all">Мои заявки</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- CONTENT -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- PROFILE SECTION -->
+            <section id="section-profile" class="fade-in">
+                <div class="grid lg:grid-cols-3 gap-8">
+                    <!-- Profile Card -->
+                    <div class="lg:col-span-1">
+                        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sticky top-24">
+                            <div class="text-center mb-6">
+                                <div id="profileAvatar" class="w-20 h-20 rounded-full bg-gradient-to-br from-brand-red to-brand-orange flex items-center justify-center text-white text-2xl font-bold mx-auto mb-4">АК</div>
+                                <h2 id="profileCompany" class="text-xl font-bold text-brand-dark">Компания</h2>
+                                <p id="profileContact" class="text-gray-500 mt-1">Контактное лицо</p>
+                            </div>
+                            <div class="space-y-4 border-t border-gray-100 pt-6">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                    </div>
+                                    <div>
+                                        <div class="text-xs text-gray-400">Email</div>
+                                        <div id="profileEmail" class="text-sm font-medium text-gray-700">—</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                                    </div>
+                                    <div>
+                                        <div class="text-xs text-gray-400">Телефон</div>
+                                        <div id="profilePhone" class="text-sm font-medium text-gray-700">—</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+                                    </div>
+                                    <div>
+                                        <div class="text-xs text-gray-400">Тариф</div>
+                                        <div id="profilePlan" class="text-sm font-medium text-gray-700">—</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="border-t border-gray-100 pt-4 mt-4">
+                                <button onclick="togglePasswordChange()" class="w-full px-4 py-2.5 text-sm font-medium text-brand-red border border-brand-red rounded-xl hover:bg-brand-red hover:text-white transition-all">Сменить пароль</button>
+                                <div id="passwordChangeForm" class="hidden mt-4 space-y-3">
+                                    <input type="password" id="currentPassword" placeholder="Текущий пароль" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-brand-red outline-none text-sm">
+                                    <input type="password" id="newPassword" placeholder="Новый пароль (мин. 6 символов)" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-brand-red outline-none text-sm">
+                                    <input type="password" id="confirmPassword" placeholder="Подтвердите пароль" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-brand-red outline-none text-sm">
+                                    <button onclick="changePassword()" class="w-full px-4 py-2.5 bg-brand-red text-white text-sm font-semibold rounded-xl hover:bg-brand-red-dark transition-all">Сохранить</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Stats & Quick Info -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="grid sm:grid-cols-3 gap-4">
+                            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                                <div class="text-3xl font-bold text-brand-dark" id="statTotal">0</div>
+                                <div class="text-sm text-gray-500 mt-1">Всего заявок</div>
+                            </div>
+                            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                                <div class="text-3xl font-bold text-blue-500" id="statActive">0</div>
+                                <div class="text-sm text-gray-500 mt-1">Активных</div>
+                            </div>
+                            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                                <div class="text-3xl font-bold text-green-500" id="statDone">0</div>
+                                <div class="text-sm text-gray-500 mt-1">Выполнено</div>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                            <div class="p-6 border-b border-gray-100">
+                                <h3 class="font-bold text-brand-dark">Последние обновления</h3>
+                            </div>
+                            <div id="recentActivity" class="divide-y divide-gray-50">
+                                <div class="p-6 text-center text-gray-400 text-sm">Нет обновлений</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TICKETS SECTION -->
+            <section id="section-tickets" class="hidden fade-in">
+                <div class="space-y-4" id="ticketsList">
+                    <!-- Filled by JS -->
+                </div>
+            </section>
+
+            <!-- TICKET DETAIL -->
+            <section id="section-ticket-detail" class="hidden fade-in">
+                <button onclick="showSection('tickets')" class="flex items-center gap-2 text-gray-500 hover:text-brand-red mb-6 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    Назад к заявкам
+                </button>
+                <div id="ticketDetail">
+                    <!-- Filled by JS -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 z-[200] hidden px-6 py-4 bg-brand-dark text-white rounded-2xl shadow-2xl flex items-center gap-3 transform translate-y-4 opacity-0 transition-all duration-300">
+        <svg class="w-5 h-5 text-green-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+        <span id="toastText"></span>
+    </div>
+
+    <script src="cabinet.js"></script>
+</body>
+</html>

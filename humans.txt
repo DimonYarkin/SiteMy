@@ -1,0 +1,12 @@
+# humans.txt
+
+/* Team */
+Company: 1С СервисПро
+Site: https://1cservice.pro
+Contact: info@1cservice.pro
+Location: Москва, Россия
+
+/* Site */
+Standards: HTML5, CSS3, JavaScript
+Components: Tailwind CSS
+Software: VS Code
