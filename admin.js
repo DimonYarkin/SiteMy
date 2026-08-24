@@ -12,6 +12,43 @@ const DB = {
     addConsentLog(entry) { const log = this.getConsentLog(); log.push(entry); localStorage.setItem('crm_consent_log', JSON.stringify(log)); },
 };
 
+// ==================== PHONE FORMAT ====================
+function formatPhone(input) {
+    let value = input.value.replace(/\D/g, '');
+    if (value.length === 0) {
+        input.value = '';
+        return;
+    }
+    // Auto-add 7 if user starts with 8 or 9
+    if (value[0] === '8') value = '7' + value.slice(1);
+    if (value[0] === '9') value = '7' + value;
+    if (value[0] !== '7') value = '7' + value;
+    
+    let formatted = '+7';
+    if (value.length > 1) formatted += ' (' + value.slice(1, 4);
+    if (value.length > 4) formatted += ') ' + value.slice(4, 7);
+    if (value.length > 7) formatted += '-' + value.slice(7, 9);
+    if (value.length > 9) formatted += '-' + value.slice(9, 11);
+    
+    input.value = formatted;
+}
+
+function phoneKeyDown(e) {
+    // Allow: backspace, delete, tab, escape, enter, arrows
+    if ([8, 46, 9, 27, 13, 37, 38, 39, 40].indexOf(e.keyCode) !== -1 ||
+        // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+        (e.keyCode === 65 && e.ctrlKey === true) ||
+        (e.keyCode === 67 && e.ctrlKey === true) ||
+        (e.keyCode === 86 && e.ctrlKey === true) ||
+        (e.keyCode === 88 && e.ctrlKey === true)) {
+        return;
+    }
+    // Ensure that it is a number and stop the keypress
+    if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+        e.preventDefault();
+    }
+}
+
 // ==================== PASSWORD HASHING ====================
 async function hashPassword(password) {
     const encoder = new TextEncoder();
