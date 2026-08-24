@@ -34,6 +34,10 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .slide-in { animation: slideIn 0.3s ease; }
         @keyframes slideIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        .chat-flash { animation: chatFlash 0.5s ease; }
+        @keyframes chatFlash { 0% { background-color: #FEF3C7; } 100% { background-color: transparent; } }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
         ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
@@ -187,51 +191,47 @@
             <!-- DASHBOARD SECTION -->
             <section id="section-dashboard" class="p-8 fade-in">
                 <!-- Stats -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-                    <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
-                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+                    <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                             </div>
-                            <span class="text-xs text-green-500 font-medium">+12%</span>
                         </div>
-                        <div class="text-3xl font-bold text-brand-dark" id="statTotal">0</div>
-                        <div class="text-sm text-gray-500 mt-1">Всего заявок</div>
+                        <div class="text-2xl font-bold text-brand-dark" id="statTotal">0</div>
+                        <div class="text-xs text-gray-500 mt-1">Всего заявок</div>
                     </div>
-                    <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center">
-                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+                    <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
                             </div>
-                            <span class="text-xs text-green-500 font-medium">с сайта</span>
                         </div>
-                        <div class="text-3xl font-bold text-brand-dark" id="statWebsite">0</div>
-                        <div class="text-sm text-gray-500 mt-1">С сайта</div>
+                        <div class="text-2xl font-bold text-brand-dark" id="statWebsite">0</div>
+                        <div class="text-xs text-gray-500 mt-1">С сайта</div>
                     </div>
-                    <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="w-12 h-12 rounded-xl bg-yellow-50 flex items-center justify-center">
-                                <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 rounded-xl bg-yellow-50 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             </div>
-                            <span class="text-xs text-yellow-500 font-medium">сейчас</span>
                         </div>
-                        <div class="text-3xl font-bold text-brand-dark" id="statNew">0</div>
-                        <div class="text-sm text-gray-500 mt-1">Новых</div>
+                        <div class="text-2xl font-bold text-brand-dark" id="statNew">0</div>
+                        <div class="text-xs text-gray-500 mt-1">Новых</div>
                     </div>
-                    <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
-                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                             </div>
-                            <span class="text-xs text-blue-500 font-medium">в работе</span>
                         </div>
-                        <div class="text-3xl font-bold text-brand-dark" id="statProgress">0</div>
-                        <div class="text-sm text-gray-500 mt-1">В работе</div>
+                        <div class="text-2xl font-bold text-brand-dark" id="statProgress">0</div>
+                        <div class="text-xs text-gray-500 mt-1">В работе</div>
                     </div>
-                    <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center">
-                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center">
+                                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             </div>
                             <span class="text-xs text-green-500 font-medium">+8%</span>
                         </div>

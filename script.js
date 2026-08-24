@@ -428,26 +428,53 @@ function escapeHtml(text) {
 }
 
 // Poll for new messages from manager
-setInterval(() => {
+let lastKnownMessageCount = 0;
+
+function pollChatMessages() {
     const sessionId = sessionStorage.getItem('chat_session_id');
-    if (!sessionId || chatOpen) return;
+    if (!sessionId) return;
     
     const chats = getChats();
     const chat = chats.find(c => c.sessionId === sessionId);
     if (!chat || !chat.messages.length) return;
     
-    const lastMsg = chat.messages[chat.messages.length - 1];
-    if (lastMsg.from === 'manager') {
-        // Show notification badge on chat button
-        const chatBtn = document.querySelector('#chatWidget button');
-        if (chatBtn && !chatBtn.querySelector('.chat-badge')) {
-            const badge = document.createElement('div');
-            badge.className = 'chat-badge absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center text-xs font-bold text-brand-dark';
-            badge.textContent = '!';
-            chatBtn.appendChild(badge);
+    const currentCount = chat.messages.length;
+    
+    // If chat is open, update messages in real-time
+    if (chatOpen) {
+        if (currentCount > lastKnownMessageCount) {
+            // New messages arrived, reload chat
+            loadChatMessages();
+        }
+    } else {
+        // If chat is closed, show badge for new manager messages
+        const lastMsg = chat.messages[chat.messages.length - 1];
+        if (lastMsg.from === 'manager' && currentCount > lastKnownMessageCount) {
+            const chatBtn = document.querySelector('#chatWidget button');
+            if (chatBtn && !chatBtn.querySelector('.chat-badge')) {
+                const badge = document.createElement('div');
+                badge.className = 'chat-badge absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center text-xs font-bold text-brand-dark';
+                badge.textContent = '!';
+                chatBtn.appendChild(badge);
+            }
         }
     }
-}, 5000);
+    
+    lastKnownMessageCount = currentCount;
+}
+
+// Poll every 2 seconds
+setInterval(pollChatMessages, 2000);
+
+// Initialize message count on page load
+document.addEventListener('DOMContentLoaded', () => {
+    const sessionId = sessionStorage.getItem('chat_session_id');
+    if (sessionId) {
+        const chats = getChats();
+        const chat = chats.find(c => c.sessionId === sessionId);
+        if (chat) lastKnownMessageCount = chat.messages.length;
+    }
+});
 
 // ==================== i18n ====================
 const translations = {

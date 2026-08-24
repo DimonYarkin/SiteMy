@@ -553,26 +553,33 @@ function renderChatList() {
 
 function createChatListItem(chat, isClosed) {
     const item = document.createElement('div');
-    item.className = `px-4 py-3 border-b border-gray-50 cursor-pointer hover:bg-gray-50 transition-colors ${activeChatSessionId === chat.sessionId ? 'bg-red-50 border-l-2 border-l-brand-red' : ''}`;
+    const isActive = activeChatSessionId === chat.sessionId;
+    const unread = chat.hasNewMessages && !isClosed;
+    
+    item.className = `px-4 py-3 border-b border-gray-50 cursor-pointer hover:bg-gray-50 transition-all ${isActive ? 'bg-red-50 border-l-2 border-l-brand-red' : ''} ${unread ? 'bg-yellow-50/50' : ''}`;
     
     const lastMsg = chat.messages.length > 0 ? chat.messages[chat.messages.length - 1] : null;
     const lastMsgText = lastMsg ? lastMsg.text.substring(0, 50) + (lastMsg.text.length > 50 ? '...' : '') : 'Нет сообщений';
     const lastMsgTime = lastMsg ? lastMsg.time : '';
-    const unread = chat.hasNewMessages && !isClosed;
     
     const statusBadge = isClosed 
         ? `<span class="text-xs px-1.5 py-0.5 rounded ${chat.closeStatus === 'resolved' ? 'bg-green-100 text-green-600' : 'bg-orange-100 text-orange-600'}">${chat.closeStatus === 'resolved' ? 'Решен' : 'Общение'}</span>`
-        : (unread ? '<span class="w-2 h-2 bg-yellow-400 rounded-full"></span>' : '');
+        : (unread ? '<span class="w-2.5 h-2.5 bg-yellow-400 rounded-full animate-pulse"></span>' : '');
+    
+    const newMsgIndicator = unread ? '<div class="w-1.5 h-1.5 bg-brand-red rounded-full absolute top-3 right-3"></div>' : '';
     
     item.innerHTML = `
-        <div class="flex items-center justify-between mb-1">
-            <span class="text-sm font-medium text-brand-dark">${chat.sessionId.substring(0, 12)}...</span>
-            <div class="flex items-center gap-2">
-                ${statusBadge}
-                <span class="text-xs text-gray-400">${lastMsgTime}</span>
+        <div class="relative">
+            ${newMsgIndicator}
+            <div class="flex items-center justify-between mb-1">
+                <span class="text-sm font-medium text-brand-dark">${chat.sessionId.substring(0, 12)}...</span>
+                <div class="flex items-center gap-2">
+                    ${statusBadge}
+                    <span class="text-xs text-gray-400">${lastMsgTime}</span>
+                </div>
             </div>
+            <p class="text-xs text-gray-500 truncate">${lastMsgText}</p>
         </div>
-        <p class="text-xs text-gray-500 truncate">${lastMsgText}</p>
     `;
     
     item.onclick = () => openChat(chat.sessionId);
@@ -597,12 +604,14 @@ function openChat(sessionId) {
     
     // Render messages
     const messagesDiv = document.getElementById('chatWindowMessages');
+    const previousCount = messagesDiv.children.length;
     messagesDiv.innerHTML = '';
     
-    chat.messages.forEach(msg => {
+    chat.messages.forEach((msg, index) => {
         const isClient = msg.from === 'client';
+        const isNew = index >= previousCount && index === chat.messages.length - 1;
         const msgDiv = document.createElement('div');
-        msgDiv.className = `mb-3 ${isClient ? '' : 'text-right'}`;
+        msgDiv.className = `mb-3 ${isClient ? '' : 'text-right'} ${isNew ? 'chat-flash' : ''}`;
         msgDiv.innerHTML = `
             <div class="text-xs text-gray-400 mb-1">${isClient ? 'Клиент' : 'Менеджер'} · ${msg.time}</div>
             <div class="inline-block px-4 py-2.5 rounded-2xl text-sm ${isClient ? 'bg-white text-gray-700 rounded-bl-md' : 'bg-brand-red text-white rounded-br-md'}">${escapeHtml(msg.text)}</div>
@@ -698,21 +707,39 @@ function closeChatWithStatus(status) {
 }
 
 // Poll for new chat messages
-setInterval(() => {
+let lastAdminMessageCount = 0;
+
+function pollAdminChats() {
     const chats = getChats();
+    const totalMessages = chats.reduce((sum, c) => sum + c.messages.length, 0);
     const hasNew = chats.some(c => c.status === 'open' && c.hasNewMessages);
+    
     updateChatBadge();
     
-    // Show notification toast for new messages
-    if (hasNew && !document.getElementById('section-livechat')?.classList.contains('hidden')) {
-        // Don't show toast if we're already on the chat page
-    } else if (hasNew) {
-        const newChat = chats.find(c => c.status === 'open' && c.hasNewMessages);
-        if (newChat) {
-            showToast('Новое сообщение в онлайн-чате!');
+    // If on livechat section, update in real-time
+    const isOnChatPage = !document.getElementById('section-livechat')?.classList.contains('hidden');
+    
+    if (isOnChatPage) {
+        // Update chat list
+        renderChatList();
+        
+        // If a chat is open, update messages
+        if (activeChatSessionId) {
+            const chat = chats.find(c => c.sessionId === activeChatSessionId);
+            if (chat && totalMessages > lastAdminMessageCount) {
+                openChat(activeChatSessionId);
+            }
         }
+    } else if (hasNew && totalMessages > lastAdminMessageCount) {
+        // Show toast notification
+        showToast('Новое сообщение в онлайн-чате!');
     }
-}, 30000); // Check every 30 seconds
+    
+    lastAdminMessageCount = totalMessages;
+}
+
+// Poll every 3 seconds
+setInterval(pollAdminChats, 3000);
 
 // ==================== SELECTS ====================
 function updateClientSelect() {
