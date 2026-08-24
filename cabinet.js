@@ -143,6 +143,7 @@ async function handleRegister(e) {
         passwordHash,
         plan: 'none',
         created: new Date().toISOString().split('T')[0],
+        source: 'cabinet',
         consentGiven: true,
         consentDate: new Date().toISOString(),
     };

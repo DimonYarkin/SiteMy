@@ -150,11 +150,80 @@ contactForm?.addEventListener('submit', (e) => {
     const formData = new FormData(contactForm);
     const data = Object.fromEntries(formData);
     
-    // Simulate submission
+    // Find or create client
+    const clients = JSON.parse(localStorage.getItem('crm_clients') || '[]');
+    let client = null;
+    
+    if (data.email) {
+        client = clients.find(c => c.email === data.email);
+    }
+    
+    if (!client) {
+        // Create anonymous client from form data
+        client = {
+            id: 'c' + Date.now(),
+            company: data.company || 'Анонимный клиент',
+            contact: data.name || 'Аноним',
+            phone: data.phone || '',
+            email: data.email || '',
+            passwordHash: '',
+            plan: 'none',
+            created: new Date().toISOString().split('T')[0],
+            consentGiven: true,
+            consentDate: new Date().toISOString(),
+            source: 'landing-form',
+        };
+        clients.push(client);
+        localStorage.setItem('crm_clients', JSON.stringify(clients));
+    }
+    
+    // Create ticket in CRM
+    const tickets = JSON.parse(localStorage.getItem('crm_tickets') || '[]');
+    const serviceMap = {
+        'dev': 'dev',
+        'hosting': 'hosting',
+        'marking': 'marking',
+        'support': 'support',
+        'outsourcing': 'outsourcing',
+        'other': 'other',
+    };
+    
+    const newTicket = {
+        id: 't' + Date.now(),
+        client: client.id,
+        subject: data.message ? data.message.substring(0, 100) : 'Заявка с сайта',
+        service: serviceMap[data.service] || 'other',
+        description: [
+            data.name ? `Имя: ${data.name}` : '',
+            data.phone ? `Телефон: ${data.phone}` : '',
+            data.email ? `Email: ${data.email}` : '',
+            data.company ? `Компания: ${data.company}` : '',
+            data.message ? `Сообщение: ${data.message}` : '',
+        ].filter(Boolean).join('\n'),
+        status: 'new',
+        assignee: '',
+        priority: 'medium',
+        created: new Date().toISOString().split('T')[0],
+        updated: new Date().toISOString().split('T')[0],
+        messages: [],
+        source: 'landing-form',
+    };
+    
+    tickets.push(newTicket);
+    localStorage.setItem('crm_tickets', JSON.stringify(tickets));
+    
+    // Log consent
+    const consentLog = JSON.parse(localStorage.getItem('crm_consent_log') || '[]');
+    consentLog.push({
+        clientId: client.id,
+        action: 'contact_form',
+        email: data.email || '',
+        timestamp: new Date().toISOString(),
+    });
+    localStorage.setItem('crm_consent_log', JSON.stringify(consentLog));
+    
     showToast('Заявка отправлена! Мы перезвоним в течение 30 минут.');
     contactForm.reset();
-    
-    console.log('Form submitted:', data);
 });
 
 // ==================== AUTH MODAL ====================

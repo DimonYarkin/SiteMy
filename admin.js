@@ -219,8 +219,10 @@ function renderDashboard() {
     const progressCount = tickets.filter(t => t.status === 'progress').length;
     const waitingCount = tickets.filter(t => t.status === 'waiting').length;
     const doneCount = tickets.filter(t => t.status === 'done').length;
+    const websiteCount = tickets.filter(t => t.source === 'landing-form').length;
     
     document.getElementById('statTotal').textContent = total;
+    document.getElementById('statWebsite').textContent = websiteCount;
     document.getElementById('statNew').textContent = newCount;
     document.getElementById('statProgress').textContent = progressCount + waitingCount;
     document.getElementById('statDone').textContent = doneCount;
@@ -250,12 +252,13 @@ function renderDashboard() {
             const client = clients.find(c => c.id === t.client);
             const statusColors = { new: 'bg-yellow-100 text-yellow-700', progress: 'bg-blue-100 text-blue-700', waiting: 'bg-orange-100 text-orange-700', done: 'bg-green-100 text-green-700' };
             const statusNames = { new: 'Новая', progress: 'В работе', waiting: 'Ожидание', done: 'Выполнена' };
+            const sourceBadge = t.source === 'landing-form' ? ' <span class="text-xs px-1.5 py-0.5 rounded bg-green-100 text-green-600">сайт</span>' : '';
             return `<div class="px-6 py-4 flex items-center justify-between hover:bg-gray-50 cursor-pointer" onclick="showTicketDetail('${t.id}')">
                 <div class="flex items-center gap-4 min-w-0">
-                    <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-sm font-bold text-gray-500">${t.id.replace('t', '#')}</div>
+                    <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-sm font-bold text-gray-500">${t.id.replace('t', '#')}${sourceBadge}</div>
                     <div class="min-w-0">
                         <div class="font-medium text-brand-dark truncate">${t.subject}</div>
-                        <div class="text-sm text-gray-500">${client ? client.company : '—'}</div>
+                        <div class="text-sm text-gray-500">${client ? client.company : 'Аноним'}</div>
                     </div>
                 </div>
                 <span class="px-3 py-1 text-xs font-medium rounded-full ${statusColors[t.status]}">${statusNames[t.status]}</span>
@@ -291,17 +294,19 @@ function renderKanban() {
         col.innerHTML = items.map(t => {
             const client = clients.find(c => c.id === t.client);
             const assignee = users.find(u => u.id === t.assignee);
+            const isAnon = !client || client.source === 'landing-form';
+            const sourceBadge = t.source === 'landing-form' ? '<span class="text-xs px-1.5 py-0.5 rounded bg-green-100 text-green-600 ml-1">сайт</span>' : '';
             return `<div class="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm cursor-grab hover:shadow-md transition-all border-l-4 ${priorityColors[t.priority]}" draggable="true" ondragstart="handleDragStart(event)" data-id="${t.id}" onclick="showTicketDetail('${t.id}')">
                 <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs text-gray-400">${t.id.replace('t', '#')}</span>
+                    <span class="text-xs text-gray-400">${t.id.replace('t', '#')}${sourceBadge}</span>
                     <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">${serviceNames[t.service] || t.service}</span>
                 </div>
                 <h4 class="font-semibold text-brand-dark text-sm mb-2 line-clamp-2">${t.subject}</h4>
                 <p class="text-xs text-gray-500 mb-3 line-clamp-2">${t.description || ''}</p>
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <div class="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold">${client ? client.company[0] : '?'}</div>
-                        <span class="text-xs text-gray-500">${client ? client.company : '—'}</span>
+                        <div class="w-6 h-6 rounded-full ${isAnon ? 'bg-gray-400' : 'bg-blue-500'} flex items-center justify-center text-white text-xs font-bold">${client ? client.company[0] : '?'}</div>
+                        <span class="text-xs text-gray-500">${client ? client.company : 'Аноним'}</span>
                     </div>
                     ${assignee ? `<div class="w-6 h-6 rounded-full bg-brand-red flex items-center justify-center text-white text-xs" title="${assignee.name}">${assignee.name[0]}</div>` : ''}
                 </div>
@@ -332,10 +337,11 @@ function renderTickets() {
         ? filtered.map(t => {
             const client = clients.find(c => c.id === t.client);
             const assignee = users.find(u => u.id === t.assignee);
+            const sourceBadge = t.source === 'landing-form' ? ' <span class="text-xs px-1.5 py-0.5 rounded bg-green-100 text-green-600">сайт</span>' : '';
             return `<tr class="hover:bg-gray-50 cursor-pointer" onclick="showTicketDetail('${t.id}')">
-                <td class="px-6 py-4 text-sm font-medium text-gray-500">${t.id.replace('t', '#')}</td>
+                <td class="px-6 py-4 text-sm font-medium text-gray-500">${t.id.replace('t', '#')}${sourceBadge}</td>
                 <td class="px-6 py-4"><div class="font-medium text-brand-dark">${t.subject}</div></td>
-                <td class="px-6 py-4 text-sm text-gray-600">${client ? client.company : '—'}</td>
+                <td class="px-6 py-4 text-sm text-gray-600">${client ? client.company : 'Аноним'}</td>
                 <td class="px-6 py-4 text-sm text-gray-600">${serviceNames[t.service] || t.service}</td>
                 <td class="px-6 py-4"><span class="px-3 py-1 text-xs font-medium rounded-full ${statusColors[t.status]}">${statusNames[t.status]}</span></td>
                 <td class="px-6 py-4 text-sm text-gray-600">${assignee ? assignee.name : '—'}</td>
@@ -360,12 +366,15 @@ function renderClients() {
     
     const planNames = { none: 'Не подключен', start: 'Старт', business: 'Бизнес', corporation: 'Корпорация' };
     const planColors = { none: 'bg-gray-100 text-gray-500', start: 'bg-blue-100 text-blue-700', business: 'bg-brand-orange/20 text-brand-orange', corporation: 'bg-brand-red/10 text-brand-red' };
+    const sourceNames = { 'landing-form': 'Сайт', 'cabinet': 'Кабинет', 'admin': 'CRM' };
+    const sourceColors = { 'landing-form': 'bg-green-100 text-green-700', 'cabinet': 'bg-blue-100 text-blue-700', 'admin': 'bg-gray-100 text-gray-700' };
     
     document.getElementById('clientsTable').innerHTML = filtered.length > 0
         ? filtered.map(c => {
             const ticketCount = tickets.filter(t => t.client === c.id).length;
+            const sourceBadge = c.source ? `<span class="px-2 py-0.5 text-xs font-medium rounded-full ${sourceColors[c.source] || sourceColors.admin}">${sourceNames[c.source] || c.source}</span>` : '';
             return `<tr class="hover:bg-gray-50">
-                <td class="px-6 py-4 font-medium text-brand-dark">${c.company}</td>
+                <td class="px-6 py-4 font-medium text-brand-dark">${c.company} ${sourceBadge}</td>
                 <td class="px-6 py-4 text-sm text-gray-600">${c.contact}</td>
                 <td class="px-6 py-4 text-sm text-gray-600">${c.phone || '—'}</td>
                 <td class="px-6 py-4 text-sm text-gray-600">${c.email || '—'}</td>
@@ -503,6 +512,7 @@ function createTicket(e) {
         created: new Date().toISOString().split('T')[0],
         updated: new Date().toISOString().split('T')[0],
         messages: [],
+        source: 'manual',
     };
     tickets.push(newTicket);
     DB.setTickets(tickets);
@@ -528,6 +538,7 @@ async function createClient(e) {
         created: new Date().toISOString().split('T')[0],
         consentGiven: true,
         consentDate: new Date().toISOString(),
+        source: 'admin',
     });
     DB.setClients(clients);
     closeModal('newClientModal');
@@ -662,6 +673,8 @@ function showTicketDetail(id) {
     const serviceNames = { dev: 'Доработка', hosting: 'Размещение', marking: 'Маркировка', support: 'Обслуживание', outsourcing: 'IT-аутсорсинг', other: 'Другое' };
     const priorityNames = { low: 'Низкий', medium: 'Средний', high: 'Высокий', urgent: 'Срочный' };
     const priorityColors = { low: 'text-gray-500', medium: 'text-blue-500', high: 'text-orange-500', urgent: 'text-red-500' };
+    const sourceNames = { 'landing-form': 'С сайта', 'manual': 'Вручную' };
+    const sourceColors = { 'landing-form': 'bg-green-100 text-green-700', 'manual': 'bg-gray-100 text-gray-700' };
     
     document.getElementById('detailTitle').textContent = ticket.subject;
     document.getElementById('ticketDetail').innerHTML = `
@@ -678,7 +691,7 @@ function showTicketDetail(id) {
                 <div class="mt-1 font-medium ${priorityColors[ticket.priority]}">${priorityNames[ticket.priority]}</div>
             </div>
             <div><span class="text-sm text-gray-500">Клиент</span>
-                <div class="mt-1 font-medium text-brand-dark">${client ? client.company : '—'}</div>
+                <div class="mt-1 font-medium text-brand-dark">${client ? client.company : 'Аноним'}${client?.source === 'landing-form' ? ' <span class="text-xs px-1.5 py-0.5 rounded bg-green-100 text-green-600">с сайта</span>' : ''}</div>
             </div>
             <div><span class="text-sm text-gray-500">Ответственный</span>
                 <div class="mt-1 font-medium text-brand-dark">${assignee ? assignee.name : '—'}</div>
@@ -686,9 +699,14 @@ function showTicketDetail(id) {
             <div><span class="text-sm text-gray-500">Услуга</span>
                 <div class="mt-1 text-gray-700">${serviceNames[ticket.service]}</div>
             </div>
+            <div><span class="text-sm text-gray-500">Источник</span>
+                <div class="mt-1"><span class="px-2 py-1 text-xs font-medium rounded-full ${sourceColors[ticket.source] || sourceColors.manual}">${sourceNames[ticket.source] || 'Вручную'}</span></div>
+            </div>
             <div><span class="text-sm text-gray-500">Создана</span>
                 <div class="mt-1 text-gray-700">${ticket.created}</div>
             </div>
+            ${client?.phone ? `<div><span class="text-sm text-gray-500">Телефон</span><div class="mt-1 text-gray-700">${client.phone}</div></div>` : ''}
+            ${client?.email ? `<div><span class="text-sm text-gray-500">Email</span><div class="mt-1 text-gray-700">${client.email}</div></div>` : ''}
         </div>
         <div>
             <span class="text-sm text-gray-500">Описание</span>
